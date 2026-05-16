@@ -150,10 +150,12 @@ function WritingModule({
   payload,
   onComplete,
   submitting,
+  isReview = false,
 }: {
   payload: WritingPayload;
   onComplete: (score: number) => void;
   submitting: boolean;
+  isReview?: boolean;
 }) {
   const [answer, setAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -191,7 +193,7 @@ function WritingModule({
         <p className="text-foreground text-lg">&ldquo;{payload.formal_input}&rdquo;</p>
       </div>
 
-      {!submitted ? (
+      {!submitted && !isReview ? (
         <>
           <label className="block text-xs text-muted uppercase tracking-wider font-display mb-1">Say it in Drill</label>
           <textarea
@@ -207,17 +209,28 @@ function WritingModule({
         </>
       ) : (
         <div className="space-y-3">
-          <div className={["rounded-xl p-4 border text-center", isCorrect ? "border-green-700 bg-green-900/20" : "border-accent/50 bg-accent/10"].join(" ")}>
-            <p className={["font-display text-2xl uppercase mb-1", isCorrect ? "text-green-400" : "text-accent"].join(" ")}>
-              {isCorrect ? "On Point 🔥" : "Keep Drilling"}
-            </p>
-            <p className="text-muted text-sm">{isCorrect ? "Your translation matches the drill structure." : "Check the reference below."}</p>
-          </div>
-          <div className="bg-surface border border-border rounded-xl p-3">
-            <p className="text-xs text-muted uppercase tracking-wider font-display mb-1">Reference</p>
-            <p className="text-foreground text-sm font-bold">&ldquo;{payload.expected_drill_output}&rdquo;</p>
-            <p className="text-muted text-xs mt-2">{payload.grammar_explanation}</p>
-          </div>
+          {isReview && !submitted && (
+            <div className="bg-surface border border-green-700 rounded-xl p-3">
+              <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-1">✓ Already completed</p>
+              <p className="text-foreground text-sm font-bold">&ldquo;{payload.expected_drill_output}&rdquo;</p>
+              <p className="text-muted text-xs mt-2">{payload.grammar_explanation}</p>
+            </div>
+          )}
+          {submitted && (
+            <>
+              <div className={["rounded-xl p-4 border text-center", isCorrect ? "border-green-700 bg-green-900/20" : "border-accent/50 bg-accent/10"].join(" ")}>
+                <p className={["font-display text-2xl uppercase mb-1", isCorrect ? "text-green-400" : "text-accent"].join(" ")}>
+                  {isCorrect ? "On Point 🔥" : "Keep Drilling"}
+                </p>
+                <p className="text-muted text-sm">{isCorrect ? "Your translation matches the drill structure." : "Check the reference below."}</p>
+              </div>
+              <div className="bg-surface border border-border rounded-xl p-3">
+                <p className="text-xs text-muted uppercase tracking-wider font-display mb-1">Reference</p>
+                <p className="text-foreground text-sm font-bold">&ldquo;{payload.expected_drill_output}&rdquo;</p>
+                <p className="text-muted text-xs mt-2">{payload.grammar_explanation}</p>
+              </div>
+            </>
+          )}
         </div>
       )}
     </Card>
@@ -237,6 +250,8 @@ export default function GuidedModulePage() {
   const [xpAwarded, setXpAwarded] = useState<number>(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // isReview = true when this module was already completed — show content, no re-submit
+  const [isReview, setIsReview] = useState(false);
 
   const [revealedTerms, setRevealedTerms] = useState<string[]>([]);
   const [activeDefinition, setActiveDefinition] = useState<BreakdownItem | null>(null);
@@ -250,21 +265,30 @@ export default function GuidedModulePage() {
     setRevealedTerms([]);
     setActiveDefinition(null);
     setVideoStarted(false);
+    setIsReview(false);
 
-    api.get<Lesson>(`/api/content/lessons/${lessonId}`)
-      .then((l) => {
+    Promise.all([
+      api.get<Lesson>(`/api/content/lessons/${lessonId}`),
+      api.get<Array<{ lesson_id: string; module_type: string }>>("/api/progress/lessons")
+        .catch(() => [] as Array<{ lesson_id: string; module_type: string }>),
+    ])
+      .then(([l, progress]) => {
         setLesson(l);
         if (l.audio_url.startsWith("{")) {
           const parsed = JSON.parse(l.audio_url);
-          // New format: { modules: { reading, listening, writing } }
-          // Old format: { module_type: "reading"|"listening"|"writing", ... }
           if (parsed.modules && parsed.modules[currentModule]) {
             setPayload(parsed.modules[currentModule] as Payload);
           } else if (parsed.module_type === currentModule) {
             setPayload(parsed as Payload);
           }
-          // else: payload stays null → "Lesson not found" shown
         }
+        // Check if this module was already completed
+        const alreadyDone = progress.some(
+          (p) => p.lesson_id === lessonId && p.module_type === currentModule
+        );
+        setIsReview(alreadyDone);
+        // If reviewing, start reading at breakdown view directly
+        if (alreadyDone) setReadingPhase("breakdown");
       })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
@@ -373,6 +397,26 @@ export default function GuidedModulePage() {
           <h1 className="font-display text-lg uppercase text-foreground tracking-wide">{lesson.title}</h1>
         </div>
 
+        {/* Review mode banner */}
+        {isReview && (
+          <div className="flex items-center gap-2 bg-green-900/20 border border-green-700 rounded-xl px-4 py-2">
+            <span className="text-green-400 text-sm">✓</span>
+            <p className="text-green-400 text-xs font-display uppercase tracking-wider">
+              Review mode — already completed
+            </p>
+            <button
+              onClick={() => {
+                const nextModule = MODULE_ORDER[MODULE_ORDER.indexOf(currentModule) + 1];
+                if (nextModule) router.push(`/learn/${lessonId}/${nextModule}`);
+                else router.push("/learn");
+              }}
+              className="ml-auto text-xs text-accent hover:underline font-display uppercase"
+            >
+              Continue →
+            </button>
+          </div>
+        )}
+
         {/* ── READING ── */}
         {currentModule === "reading" && payload.module_type === "reading" && (
           <>
@@ -444,8 +488,11 @@ export default function GuidedModulePage() {
                     </ul>
                   </Card>
                 )}
-                <Button variant="primary" size="md" className="w-full" loading={submitting} onClick={() => saveProgress(100)}>
-                  Complete Reading (+{payload.xp_reward} XP)
+                <Button variant="primary" size="md" className="w-full" loading={submitting}
+                  onClick={() => saveProgress(100)}
+                  disabled={isReview}
+                >
+                  {isReview ? "✓ Already Completed" : `Complete Reading (+${payload.xp_reward} XP)`}
                 </Button>
               </>
             )}
@@ -481,11 +528,18 @@ export default function GuidedModulePage() {
               </Card>
               <Card>
                 <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">🎵 Fill in the blanks</p>
-                <FillInBlank
-                  transcript={buildTranscript(payload.exercise_text)}
-                  blanks={buildBlankSlots(payload.blanks)}
-                  onComplete={(score) => saveProgress(score)}
-                />
+                {isReview ? (
+                  <div className="bg-surface border border-green-700 rounded-xl p-3">
+                    <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-2">✓ Already completed</p>
+                    <p className="text-foreground text-sm">&ldquo;{payload.original_bar}&rdquo;</p>
+                  </div>
+                ) : (
+                  <FillInBlank
+                    transcript={buildTranscript(payload.exercise_text)}
+                    blanks={buildBlankSlots(payload.blanks)}
+                    onComplete={(score) => saveProgress(score)}
+                  />
+                )}
               </Card>
               <Card>
                 <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">Word Bank</p>
@@ -501,7 +555,7 @@ export default function GuidedModulePage() {
 
         {/* ── WRITING — Smart local evaluation ── */}
         {currentModule === "writing" && payload.module_type === "writing" && (
-          <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} />
+          <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} isReview={isReview} />
         )}
 
         {/* ── SPEAKING — Live Block Feedback via Gemini Audio ── */}
