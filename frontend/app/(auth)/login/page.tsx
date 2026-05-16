@@ -34,9 +34,10 @@ export default function LoginPage() {
         { public: true }
       );
       setToken(data.token);
-      // Also set cookie for middleware
+      // Set cookie for middleware and force a full navigation so
+      // Next.js middleware re-evaluates the cookie on the new request
       document.cookie = `drillingo_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail);
