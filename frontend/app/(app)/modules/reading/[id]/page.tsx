@@ -91,7 +91,7 @@ export default function ReadingModulePage() {
       (b) => b.abbr.toLowerCase() === term.toLowerCase()
     );
     if (item) {
-      setRevealedTerms((prev) => new Set([...prev, term.toLowerCase()]));
+      setRevealedTerms((prev) => new Set(Array.from(prev).concat(term.toLowerCase())));
       setActiveDefinition(item);
     }
   }

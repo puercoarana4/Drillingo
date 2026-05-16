@@ -481,15 +481,19 @@ async def _reset_content(session: AsyncSession) -> None:
     NO borra usuarios ni su progreso — solo el contenido semilla con IDs conocidos.
     """
     print("  → Borrando lecciones existentes...")
-    await session.execute(
-        text("DELETE FROM lessons WHERE id = ANY(:ids)"),
-        {"ids": [str(l["id"]) for l in ALL_LESSONS]},
-    )
+    lesson_ids = [str(l["id"]) for l in ALL_LESSONS]
+    for lid in lesson_ids:
+        await session.execute(
+            text("DELETE FROM lessons WHERE id = :id"),
+            {"id": lid},
+        )
     print("  → Borrando vocabulario existente...")
-    await session.execute(
-        text("DELETE FROM vocabulary_items WHERE id = ANY(:ids)"),
-        {"ids": [str(v["id"]) for v in VOCABULARY_ITEMS]},
-    )
+    vocab_ids = [str(v["id"]) for v in VOCABULARY_ITEMS]
+    for vid in vocab_ids:
+        await session.execute(
+            text("DELETE FROM vocabulary_items WHERE id = :id"),
+            {"id": vid},
+        )
     await session.commit()
     print("  ✓ Contenido previo eliminado.")
 
@@ -504,8 +508,8 @@ async def _seed_vocabulary(session: AsyncSession) -> None:
                     (id, term, definition, example_sentence, dialect_segment, level_band)
                 VALUES
                     (:id, :term, :definition, :example_sentence,
-                     :dialect_segment::dialect_segment_enum,
-                     :level_band::level_band_enum)
+                     CAST(:dialect_segment AS dialect_segment_enum),
+                     CAST(:level_band AS level_band_enum))
                 ON CONFLICT (id) DO NOTHING
             """),
             {
@@ -531,8 +535,8 @@ async def _seed_lessons(session: AsyncSession) -> None:
                     (id, title, dialect_segment, level_band, day_order, audio_url)
                 VALUES
                     (:id, :title,
-                     :dialect_segment::dialect_segment_enum,
-                     :level_band::level_band_enum,
+                     CAST(:dialect_segment AS dialect_segment_enum),
+                     CAST(:level_band AS level_band_enum),
                      :day_order, :audio_url)
                 ON CONFLICT (id) DO NOTHING
             """),
