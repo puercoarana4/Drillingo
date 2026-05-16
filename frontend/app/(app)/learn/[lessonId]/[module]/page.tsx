@@ -6,7 +6,7 @@ import Link from "next/link";
 import ChatBubble from "@/components/modules/ChatBubble";
 import DrillYoutubePlayer from "@/components/modules/DrillYoutubePlayer";
 import FillInBlank, { BlankSlot } from "@/components/modules/FillInBlank";
-import DrillWritingEval from "@/components/modules/DrillWritingEval";
+import SpeakingRecorder from "@/components/modules/SpeakingRecorder";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { api } from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ModuleType = "reading" | "listening" | "writing";
+type ModuleType = "reading" | "listening" | "writing" | "speaking";
 
 interface Lesson {
   id: string;
@@ -71,9 +71,17 @@ interface WritingPayload {
   xp_reward: number;
 }
 
-type Payload = ReadingPayload | ListeningPayload | WritingPayload;
+interface SpeakingPayload {
+  module_type: "speaking";
+  target_phrase: string;
+  phonetic_tips: string[];
+  cefr_target: string;
+  xp_reward: number;
+}
 
-const MODULE_ORDER: ModuleType[] = ["reading", "listening", "writing"];
+type Payload = ReadingPayload | ListeningPayload | WritingPayload | SpeakingPayload;
+
+const MODULE_ORDER: ModuleType[] = ["reading", "listening", "writing", "speaking"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -482,6 +490,35 @@ export default function GuidedModulePage() {
         {/* ── WRITING — Smart local evaluation ── */}
         {currentModule === "writing" && payload.module_type === "writing" && (
           <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} />
+        )}
+
+        {/* ── SPEAKING — Live Block Feedback via Gemini Audio ── */}
+        {currentModule === "speaking" && payload.module_type === "speaking" && (
+          <Card>
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">🎙️ Live Block Feedback</p>
+
+            {/* Phonetic tips */}
+            {payload.phonetic_tips.length > 0 && (
+              <div className="mb-4 space-y-1">
+                <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">Phonetic Tips</p>
+                {payload.phonetic_tips.map((tip, i) => (
+                  <div key={i} className="flex gap-2 text-sm">
+                    <span className="text-accent flex-shrink-0">•</span>
+                    <span className="text-foreground">{tip}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <SpeakingRecorder
+              targetPhrase={payload.target_phrase}
+              level={lesson.level_band}
+              onComplete={(result) => {
+                const avg = Math.round((result.pronunciation_score + result.fluency_score) / 2);
+                saveProgress(avg);
+              }}
+            />
+          </Card>
         )}
       </div>
     </>

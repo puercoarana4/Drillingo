@@ -149,6 +149,18 @@ def _build_seed_lessons():
                 "cefr_target": "B1→B2",
                 "xp_reward": 20,
             },
+            "speaking": {
+                "module_type": "speaking",
+                "target_phrase": "Word to my mom, I ain't runnin' from no opp.",
+                "phonetic_tips": [
+                    "'Word to my mom' — stress on 'Word', drop the 'g' in running → 'runnin'",
+                    "'ain't' — contract fully, sounds like 'eynt' not 'am not'",
+                    "'no opp' — 'no' is unstressed, 'opp' gets the stress",
+                    "Rhythm: speak in a flow, not word-by-word — match Kay Flock's cadence",
+                ],
+                "cefr_target": "B1→B2",
+                "xp_reward": 25,
+            },
         },
     })
 
@@ -210,6 +222,19 @@ def _build_seed_lessons():
                 "grammar_explanation": "Dropped copula: 'He trippin'' = 'He is acting crazy'. Double negation: 'don't know nobody' = emphatic.",
                 "cefr_target": "B1→B2",
                 "xp_reward": 20,
+            },
+            "speaking": {
+                "module_type": "speaking",
+                "target_phrase": "We finna slide, merch it on Von you ain't outside.",
+                "phonetic_tips": [
+                    "'finna' — one fluid word, not 'fixing to'. Sounds like 'finna' with a short 'i'",
+                    "'slide' — elongate slightly, Chicago drawl on the vowel",
+                    "'merch it' — stress on 'merch', 'it' is unstressed and quick",
+                    "'ain't outside' — 'ain't' contracted hard, 'outside' = two syllables with stress on 'out'",
+                    "Overall rhythm: match King Von's flow — confident, measured, not rushed",
+                ],
+                "cefr_target": "B1→B2",
+                "xp_reward": 25,
             },
         },
     })
