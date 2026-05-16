@@ -336,18 +336,30 @@ export default function GuidedModulePage() {
           <span className="text-muted text-xs font-display uppercase">{currentModuleIndex + 1}/{MODULE_ORDER.length}</span>
         </div>
 
-        {/* Module tabs */}
+        {/* Module tabs — clickable for completed modules */}
         <div className="flex gap-2">
-          {MODULE_ORDER.map((mod, i) => (
-            <div key={mod} className={[
-              "flex-1 py-2 rounded-lg text-center text-xs font-display uppercase tracking-wider",
-              mod === currentModule ? "bg-accent text-white"
-                : i < currentModuleIndex ? "bg-green-900/40 text-green-400"
-                : "bg-border text-muted",
-            ].join(" ")}>
-              {i < currentModuleIndex ? "✓ " : ""}{mod}
-            </div>
-          ))}
+          {MODULE_ORDER.map((mod, i) => {
+            const isCompleted = i < currentModuleIndex;
+            const isCurrent = mod === currentModule;
+            return (
+              <button
+                key={mod}
+                disabled={!isCompleted && !isCurrent}
+                onClick={() => {
+                  if (isCompleted) router.push(`/learn/${lessonId}/${mod}`);
+                }}
+                className={[
+                  "flex-1 py-2 rounded-lg text-center text-xs font-display uppercase tracking-wider transition-colors",
+                  isCurrent ? "bg-accent text-white"
+                    : isCompleted ? "bg-green-900/40 text-green-400 hover:bg-green-900/60 cursor-pointer"
+                    : "bg-border text-muted cursor-not-allowed",
+                ].join(" ")}
+                title={isCompleted ? `Review ${mod}` : isCurrent ? `Current: ${mod}` : `Complete previous modules first`}
+              >
+                {isCompleted ? "✓ " : ""}{mod}
+              </button>
+            );
+          })}
         </div>
 
         {/* Lesson header */}

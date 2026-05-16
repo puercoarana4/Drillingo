@@ -96,22 +96,14 @@ function LessonNodeCard({
   };
 
   return (
-    <div className={`flex items-center gap-4 ${isLeft ? "flex-row" : "flex-row-reverse"}`}>
-      {/* Connector line placeholder for alignment */}
-      <div className="w-16 flex-shrink-0" />
-
-      {/* Node card */}
-      <div
-        className={[
-          "flex-1 max-w-sm rounded-2xl p-5 border-2 transition-all duration-500",
-          status === "completed"
-            ? "border-green-600 bg-green-900/20"
-            : status === "active"
-            ? "border-accent bg-surface shadow-lg shadow-accent/20"
-            : "border-border bg-surface/50 opacity-50",
-          justUnlocked ? "animate-pulse" : "",
-        ].join(" ")}
-      >
+    <div className="w-full rounded-2xl p-5 border-2 transition-all duration-500"
+      style={{
+        borderColor: status === "completed" ? "#16a34a" : status === "active" ? "#FF0033" : "#333333",
+        backgroundColor: status === "completed" ? "rgba(22,163,74,0.1)" : status === "active" ? "#242424" : "rgba(36,36,36,0.5)",
+        opacity: status === "locked" ? 0.5 : 1,
+        boxShadow: status === "active" ? "0 0 20px rgba(255,0,51,0.15)" : "none",
+      }}
+    >
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -187,8 +179,8 @@ function LessonNodeCard({
           >
             {completedModules.size === 0
               ? "Start Lesson"
-              : completedModules.size < 3
-              ? `Continue (${completedModules.size}/3)`
+              : completedModules.size < 4
+              ? `Continue (${completedModules.size}/4)`
               : "Review"}
           </button>
         )}
@@ -206,7 +198,6 @@ function LessonNodeCard({
           </div>
         )}
       </div>
-    </div>
   );
 }
 
@@ -266,7 +257,6 @@ export default function LearnPage() {
         <p className="text-muted text-sm">
           {completedCount} / {totalCount} lessons complete
         </p>
-        {/* Overall progress bar */}
         <div className="mt-3 h-2 bg-border rounded-full overflow-hidden">
           <div
             className="h-full bg-accent rounded-full transition-all duration-700"
@@ -275,24 +265,10 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* Path */}
-      <div className="relative space-y-6">
-        {/* Vertical line */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2 z-0" />
-
+      {/* Path — centered single column */}
+      <div className="flex flex-col items-center gap-6">
         {nodes.map((node, i) => (
-          <div key={node.lesson.id} className="relative z-10">
-            {/* Connector dot */}
-            <div
-              className={[
-                "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 z-20",
-                node.status === "completed"
-                  ? "bg-green-600 border-green-600"
-                  : node.status === "active"
-                  ? "bg-accent border-accent"
-                  : "bg-background border-border",
-              ].join(" ")}
-            />
+          <div key={node.lesson.id} className="w-full max-w-sm">
             <LessonNodeCard
               node={node}
               index={i}
@@ -302,17 +278,14 @@ export default function LearnPage() {
           </div>
         ))}
 
-        {/* End of path */}
         {totalCount > 0 && (
-          <div className="relative z-10 flex justify-center pt-4">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-border flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🏆</span>
-              </div>
-              <p className="text-muted text-xs font-display uppercase tracking-wider">
-                More coming soon
-              </p>
+          <div className="text-center pt-4">
+            <div className="w-16 h-16 rounded-full bg-border flex items-center justify-center mx-auto mb-2">
+              <span className="text-2xl">🏆</span>
             </div>
+            <p className="text-muted text-xs font-display uppercase tracking-wider">
+              More coming soon
+            </p>
           </div>
         )}
       </div>
