@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: drillingo
+      POSTGRES_PASSWORD: drillingo
+      POSTGRES_DB: drillingo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    image: node:20-alpine
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    command: npm run dev
+
+volumes:
+  postgres_data:

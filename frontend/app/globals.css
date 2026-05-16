@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Roboto Black from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
+
+/* ── Base dark mode (Req 12.1) ─────────────────────────────────────────────── */
+:root {
+  --color-background: #1A1A1A;
+  --color-surface: #242424;
+  --color-accent: #FF0033;
+  --color-foreground: #FFFFFF;
+  --color-muted: #6B6B6B;
+  --color-border: #333333;
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar styling ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* ── Utility classes ───────────────────────────────────────────────────────── */
+.font-display {
+  font-family: Impact, 'Roboto Black', 'Arial Black', sans-serif;
+}
