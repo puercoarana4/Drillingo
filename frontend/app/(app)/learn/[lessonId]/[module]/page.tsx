@@ -167,7 +167,15 @@ export default function GuidedModulePage() {
       .then((l) => {
         setLesson(l);
         if (l.audio_url.startsWith("{")) {
-          setPayload(JSON.parse(l.audio_url) as Payload);
+          const parsed = JSON.parse(l.audio_url);
+          // New format: { modules: { reading, listening, writing } }
+          // Old format: { module_type: "reading"|"listening"|"writing", ... }
+          if (parsed.modules && parsed.modules[currentModule]) {
+            setPayload(parsed.modules[currentModule] as Payload);
+          } else if (parsed.module_type === currentModule) {
+            setPayload(parsed as Payload);
+          }
+          // else: payload stays null → "Lesson not found" shown
         }
       })
       .catch(() => router.push("/login"))
