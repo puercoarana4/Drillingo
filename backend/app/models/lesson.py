@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Integer, String, TIMESTAMP, text
+from sqlalchemy import Integer, String, Text, TIMESTAMP, text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -26,7 +26,8 @@ class Lesson(Base):
     )
     day_order: Mapped[int] = mapped_column(Integer(), nullable=False)
     # Audio stored in Object Storage (S3/Supabase); only URL persisted here (Req 5.7)
-    audio_url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    # TEXT type to support JSON payloads for exercise content
+    audio_url: Mapped[str] = mapped_column(Text(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("NOW()")
     )
