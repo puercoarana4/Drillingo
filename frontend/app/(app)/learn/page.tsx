@@ -283,9 +283,15 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full bg-border flex items-center justify-center mx-auto mb-2">
               <span className="text-2xl">🏆</span>
             </div>
-            <p className="text-muted text-xs font-display uppercase tracking-wider">
+            <p className="text-muted text-xs font-display uppercase tracking-wider mb-4">
               More coming soon
             </p>
+            <a
+              href="/practice"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-accent text-accent font-display uppercase tracking-wider text-sm hover:bg-accent hover:text-white transition-colors"
+            >
+              🎙️ Free Practice with AI
+            </a>
           </div>
         )}
       </div>

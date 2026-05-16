@@ -8,6 +8,7 @@ import { removeToken } from "@/lib/auth";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/learn", label: "Learn" },
+  { href: "/practice", label: "Practice" },
   { href: "/vocabulary", label: "Vocab" },
 ];
 
