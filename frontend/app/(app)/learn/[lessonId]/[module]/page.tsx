@@ -136,6 +136,86 @@ function CelebrationOverlay({
   );
 }
 
+// ── Writing Module (local evaluation — no Gemini required) ───────────────────
+
+function WritingModule({
+  payload,
+  onComplete,
+  submitting,
+}: {
+  payload: WritingPayload;
+  onComplete: (score: number) => void;
+  submitting: boolean;
+}) {
+  const [answer, setAnswer] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+
+  function normalise(s: string): string {
+    return s.toLowerCase().trim().replace(/[^\w\s']/g, "").replace(/\s+/g, " ");
+  }
+
+  function handleSubmit() {
+    const norm = normalise(answer);
+    const correct = payload.accepted_variants.some((v) => normalise(v) === norm);
+    setIsCorrect(correct);
+    setSubmitted(true);
+    onComplete(correct ? 100 : 40);
+  }
+
+  return (
+    <Card>
+      <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">🎤 Spitting Bars</p>
+
+      {/* Rubric */}
+      <div className="space-y-1 mb-4">
+        {Object.entries(payload.evaluation_rubric).map(([key, c]) => (
+          <div key={key} className="flex items-start justify-between gap-3 text-xs">
+            <span className="text-muted flex-1">{c.description} <span className="font-mono text-muted/60">{c.example}</span></span>
+            <span className="text-accent font-display flex-shrink-0">+{c.points}pts</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Formal input */}
+      <div className="bg-background border border-border rounded-xl p-4 mb-4">
+        <p className="text-xs text-muted uppercase tracking-wider font-display mb-1">Formal English</p>
+        <p className="text-foreground text-lg">&ldquo;{payload.formal_input}&rdquo;</p>
+      </div>
+
+      {!submitted ? (
+        <>
+          <label className="block text-xs text-muted uppercase tracking-wider font-display mb-1">Say it in Drill</label>
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            rows={3}
+            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted focus:outline-none focus:border-accent transition-colors resize-none mb-3"
+            placeholder="e.g. I ain't finna do allat..."
+          />
+          <Button variant="primary" size="md" className="w-full" disabled={!answer.trim()} loading={submitting} onClick={handleSubmit}>
+            Spit It 🎤
+          </Button>
+        </>
+      ) : (
+        <div className="space-y-3">
+          <div className={["rounded-xl p-4 border text-center", isCorrect ? "border-green-700 bg-green-900/20" : "border-accent/50 bg-accent/10"].join(" ")}>
+            <p className={["font-display text-2xl uppercase mb-1", isCorrect ? "text-green-400" : "text-accent"].join(" ")}>
+              {isCorrect ? "On Point 🔥" : "Keep Drilling"}
+            </p>
+            <p className="text-muted text-sm">{isCorrect ? "Your translation matches the drill structure." : "Check the reference below."}</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-3">
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-1">Reference</p>
+            <p className="text-foreground text-sm font-bold">&ldquo;{payload.expected_drill_output}&rdquo;</p>
+            <p className="text-muted text-xs mt-2">{payload.grammar_explanation}</p>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function GuidedModulePage() {
@@ -399,20 +479,9 @@ export default function GuidedModulePage() {
           );
         })()}
 
-        {/* ── WRITING — Gemini-powered evaluation ── */}
+        {/* ── WRITING — Smart local evaluation ── */}
         {currentModule === "writing" && payload.module_type === "writing" && (
-          <Card>
-            <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">🎤 Spitting Bars</p>
-            <DrillWritingEval
-              formalInput={payload.formal_input}
-              referenceAnswer={payload.expected_drill_output}
-              acceptedVariants={payload.accepted_variants}
-              rubric={payload.evaluation_rubric}
-              grammarExplanation={payload.grammar_explanation}
-              xpReward={payload.xp_reward}
-              onComplete={(score) => saveProgress(score)}
-            />
-          </Card>
+          <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} />
         )}
       </div>
     </>

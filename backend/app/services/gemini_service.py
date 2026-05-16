@@ -16,9 +16,9 @@ from app.core.config import settings
 # Configure once at import time
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
-# Model aliases — updated to current available models
-_FLASH = "gemini-2.0-flash"   # fast — chat, speaking
-_PRO   = "gemini-2.0-flash"   # writing evaluation (1.5-pro deprecated)
+# Model aliases — gemini-1.5-flash for all features (better free tier quotas)
+_FLASH = "gemini-1.5-flash"
+_PRO   = "gemini-1.5-flash"
 
 
 # ── Writing Evaluation ────────────────────────────────────────────────────────
