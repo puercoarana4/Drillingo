@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.database import get_db
 from app.routers import auth, content, progress, streak, report, dashboard, ai
 
 app = FastAPI(
@@ -32,3 +34,12 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@app.get("/health/db", tags=["health"])
+async def db_health(db: AsyncSession = Depends(get_db)):
+    """DB health — shows lesson and vocab counts without auth."""
+    from sqlalchemy import text
+    lessons = (await db.execute(text("SELECT COUNT(*) FROM lessons"))).scalar()
+    vocab = (await db.execute(text("SELECT COUNT(*) FROM vocabulary_items"))).scalar()
+    return {"lessons": lessons, "vocabulary_items": vocab}
