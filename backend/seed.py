@@ -404,6 +404,19 @@ async def _seed_vocabulary(session: AsyncSession) -> None:
 
 
 async def _seed_lessons(session: AsyncSession) -> None:
+    # Always delete old-format lesson IDs first (they have wrong structure)
+    old_ids = [
+        "22222222-0001-0001-0001-000000000001",
+        "22222222-0002-0002-0002-000000000002",
+        "33333333-0001-0001-0001-000000000001",
+        "33333333-0002-0002-0002-000000000002",
+        "44444444-0001-0001-0001-000000000001",
+        "44444444-0002-0002-0002-000000000002",
+    ]
+    for lid in old_ids:
+        await session.execute(text("DELETE FROM lessons WHERE id = :id"), {"id": lid})
+    await session.commit()
+
     print(f"  → Insertando/actualizando {len(ALL_LESSONS)} lecciones...")
     for lesson in ALL_LESSONS:
         await session.execute(
