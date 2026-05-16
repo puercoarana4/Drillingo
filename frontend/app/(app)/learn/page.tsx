@@ -30,7 +30,7 @@ interface LessonNode {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const REQUIRED_MODULES = ["reading", "listening", "writing"] as const;
+const REQUIRED_MODULES = ["reading", "listening", "writing", "speaking"] as const;
 
 function buildNodes(lessons: Lesson[], progress: ProgressRecord[]): LessonNode[] {
   // Group progress by lesson_id
@@ -92,6 +92,7 @@ function LessonNodeCard({
     reading: "📖",
     listening: "🎵",
     writing: "✍️",
+    speaking: "🎙️",
   };
 
   return (

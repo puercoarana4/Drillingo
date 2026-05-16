@@ -6,18 +6,20 @@ import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
 interface DrillYoutubePlayerProps {
   videoId: string;
   title?: string;
-  /** Called when the video starts playing for the first time */
   onFirstPlay?: () => void;
+  onError?: () => void;
 }
 
 export default function DrillYoutubePlayer({
   videoId,
   title,
   onFirstPlay,
+  onError,
 }: DrillYoutubePlayerProps) {
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const [embedError, setEmbedError] = useState(false);
   const playerRef = useRef<YouTubePlayer | null>(null);
 
   const opts = {
@@ -46,6 +48,33 @@ export default function DrillYoutubePlayer({
 
   function handlePause() {
     setPlaying(false);
+  }
+
+  function handleError() {
+    setEmbedError(true);
+    onError?.();
+  }
+
+  // Fallback when YouTube blocks the embed
+  if (embedError) {
+    return (
+      <div className="rounded-xl border border-border bg-surface p-4 text-center">
+        <p className="text-muted text-sm mb-2">
+          🔒 This video cannot be embedded.
+        </p>
+        <a
+          href={`https://www.youtube.com/watch?v=${videoId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent text-sm hover:underline font-display uppercase tracking-wider"
+        >
+          Watch on YouTube →
+        </a>
+        <p className="text-muted text-xs mt-2">
+          Open the video, listen to the bar, then fill in the blanks below.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -80,16 +109,12 @@ export default function DrillYoutubePlayer({
             onReady={handleReady}
             onPlay={handlePlay}
             onPause={handlePause}
+            onError={handleError}
             className="w-full h-full"
             iframeClassName="w-full h-full"
           />
         </div>
       </div>
-      {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <div className="animate-spin h-8 w-8 border-2 border-accent border-t-transparent rounded-full" />
-        </div>
-      )}
     </div>
   );
 }
