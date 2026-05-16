@@ -16,6 +16,7 @@ app.add_middleware(
         "http://localhost:3000",
         "https://drillingo.vercel.app",
         "https://*.vercel.app",
+        "https://drillingo-o1wl0zbui-sdg-records.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

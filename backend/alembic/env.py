@@ -1,33 +1,48 @@
-import asyncio
 import os
 from logging.config import fileConfig
-from sqlalchemy import pool, create_engine
+from sqlalchemy import pool, create_engine, text
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
-config = context.config
+alembic_config = context.config
 
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# Import all models so Alembic can detect them
-from app.core.database import Base
-from app.models import *  # noqa: F401, F403
-
-target_metadata = Base.metadata
+if alembic_config.config_file_name is not None:
+    fileConfig(alembic_config.config_file_name)
 
 
 def get_sync_url() -> str:
-    """
-    Get a synchronous database URL for Alembic migrations.
-    Converts asyncpg URL to psycopg2 URL if needed.
-    """
-    url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
-    # Convert async drivers to sync for Alembic
+    """Get a synchronous (psycopg2) database URL for Alembic migrations."""
+    url = os.environ.get(
+        "DATABASE_URL",
+        alembic_config.get_main_option("sqlalchemy.url", "")
+    )
+    # Strip async drivers — Alembic needs psycopg2 (sync)
     url = url.replace("postgresql+asyncpg://", "postgresql://")
     url = url.replace("postgres://", "postgresql://")
     return url
+
+
+# Import models for autogenerate support
+# We import Base directly without triggering async engine creation
+from sqlalchemy.orm import DeclarativeBase
+
+class Base(DeclarativeBase):
+    pass
+
+# Import all models so Alembic sees the tables
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.models.user import User  # noqa
+from app.models.lesson import Lesson  # noqa
+from app.models.vocabulary import VocabularyItem, UserVocabulary  # noqa
+from app.models.progress import LessonProgress  # noqa
+from app.models.streak import Streak  # noqa
+from app.models.oral_report import OralReport  # noqa
+
+# Use the app's Base for metadata (models are registered there)
+from app.core.database import Base as AppBase
+target_metadata = AppBase.metadata
 
 
 def run_migrations_offline() -> None:
