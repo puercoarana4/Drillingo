@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, content, progress, streak, report, dashboard
+from app.routers import auth, content, progress, streak, report, dashboard, ai
 
 app = FastAPI(
     title="Drillingo API",
@@ -25,6 +25,7 @@ app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 app.include_router(streak.router, prefix="/api/streak", tags=["streak"])
 app.include_router(report.router, prefix="/api/reports", tags=["reports"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 
 
 @app.get("/health", tags=["health"])

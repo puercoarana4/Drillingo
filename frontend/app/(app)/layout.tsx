@@ -1,6 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
+import FloatingTutorChat from "@/components/FloatingTutorChat";
 
-// App group layout — includes navbar
+// App group layout — includes navbar and global AI tutor
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
@@ -8,6 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+      <FloatingTutorChat />
     </div>
   );
 }

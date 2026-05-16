@@ -277,6 +277,7 @@ _LISTENING_MW_PAYLOAD = _jdump({
     "artist": "King Von",
     "dialect_focus": "Midwest / Chicago",
     "audio_s3_url": "https://drillingo-assets.s3.amazonaws.com/audio/king_von_finna_slide.mp3",
+    "youtube_video_id": "RKnS5pDDMoI",
     "original_bar": "We finna slide, merch it on Von you ain't outside.",
     "exercise_text": "We ______ slide, ______ it on Von you ain't outside.",
     "blanks": [
@@ -312,6 +313,7 @@ _LISTENING_EC_PAYLOAD = _jdump({
     "artist": "Kay Flock",
     "dialect_focus": "East Coast / NYC",
     "audio_s3_url": "https://drillingo-assets.s3.amazonaws.com/audio/kay_flock_word_to_my_mom.mp3",
+    "youtube_video_id": "Hy-tMDFBpgk",
     "original_bar": "Word to my mom, I ain't runnin' from no opp.",
     "exercise_text": "______ to my mom, I ______ runnin' from no opp.",
     "blanks": [
