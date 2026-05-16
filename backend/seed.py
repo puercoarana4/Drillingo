@@ -404,7 +404,7 @@ async def _seed_vocabulary(session: AsyncSession) -> None:
 
 
 async def _seed_lessons(session: AsyncSession) -> None:
-    print(f"  → Insertando {len(ALL_LESSONS)} lecciones...")
+    print(f"  → Insertando/actualizando {len(ALL_LESSONS)} lecciones...")
     for lesson in ALL_LESSONS:
         await session.execute(
             text("""
@@ -415,7 +415,10 @@ async def _seed_lessons(session: AsyncSession) -> None:
                      CAST(:dialect_segment AS dialect_segment_enum),
                      CAST(:level_band AS level_band_enum),
                      :day_order, :audio_url)
-                ON CONFLICT (id) DO NOTHING
+                ON CONFLICT (id) DO UPDATE SET
+                    title = EXCLUDED.title,
+                    audio_url = EXCLUDED.audio_url,
+                    day_order = EXCLUDED.day_order
             """),
             {
                 "id": str(lesson["id"]),
@@ -427,7 +430,7 @@ async def _seed_lessons(session: AsyncSession) -> None:
             },
         )
     await session.commit()
-    print(f"  ✓ {len(ALL_LESSONS)} lecciones insertadas.")
+    print(f"  ✓ {len(ALL_LESSONS)} lecciones insertadas/actualizadas.")
 
 
 async def _verify(session: AsyncSession) -> None:
