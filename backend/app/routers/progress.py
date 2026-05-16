@@ -8,6 +8,7 @@ from app.routers.auth import get_current_user
 from app.schemas.progress import (
     LessonProgressRequest,
     LessonProgressResponse,
+    LessonModuleProgressResponse,
     ProgressSummaryResponse,
     VocabularyProgressResponse,
 )
@@ -33,6 +34,23 @@ async def record_lesson_progress(
     """
     service = ProgressService(db)
     return await service.record_lesson_progress(current_user.id, data)
+
+
+@router.get(
+    "/lessons",
+    response_model=list[LessonModuleProgressResponse],
+    summary="Get per-lesson module completion for the current user",
+)
+async def get_lessons_progress(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Return a flat list of completed lesson+module combinations.
+    Used by the learning path to determine which nodes are unlocked.
+    """
+    service = ProgressService(db)
+    return await service.get_lessons_progress(current_user.id)
 
 
 @router.get(

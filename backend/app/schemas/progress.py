@@ -26,6 +26,16 @@ class LessonProgressRequest(BaseModel):
         return v
 
 
+class LessonModuleProgressResponse(BaseModel):
+    """Flat record of a completed lesson module — used by the learning path."""
+    lesson_id: uuid.UUID
+    module_type: str
+    score: int
+    completed_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class LessonProgressResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID

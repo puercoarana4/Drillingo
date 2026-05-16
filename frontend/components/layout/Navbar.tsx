@@ -7,9 +7,8 @@ import { removeToken } from "@/lib/auth";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/lessons", label: "Lessons" },
+  { href: "/learn", label: "Learn" },
   { href: "/vocabulary", label: "Vocab" },
-  { href: "/modules/speaking", label: "Speaking" },
 ];
 
 interface NavbarProps {

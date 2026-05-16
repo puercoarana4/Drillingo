@@ -10,6 +10,7 @@ from app.repositories.progress_repo import ProgressRepository
 from app.schemas.progress import (
     LessonProgressRequest,
     LessonProgressResponse,
+    LessonModuleProgressResponse,
     ProgressSummaryResponse,
     VocabularyProgressResponse,
 )
@@ -150,6 +151,24 @@ class ProgressService:
                     )
                 )
         return responses
+
+    async def get_lessons_progress(
+        self, user_id: uuid.UUID
+    ) -> list[LessonModuleProgressResponse]:
+        """
+        Return flat list of all completed lesson+module records.
+        Used by the learning path to determine node unlock status.
+        """
+        rows = await self.repo.get_all_lesson_progress(user_id)
+        return [
+            LessonModuleProgressResponse(
+                lesson_id=r.lesson_id,
+                module_type=r.module_type,
+                score=r.score,
+                completed_at=r.completed_at,
+            )
+            for r in rows
+        ]
 
     async def update_vocabulary_interaction(
         self,

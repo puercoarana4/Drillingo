@@ -32,6 +32,15 @@ class ProgressRepository:
         await self.db.refresh(record)
         return record
 
+    async def get_all_lesson_progress(self, user_id: uuid.UUID) -> list[LessonProgress]:
+        """Return all lesson_progress rows for a user (for learning path)."""
+        result = await self.db.execute(
+            select(LessonProgress)
+            .where(LessonProgress.user_id == user_id)
+            .order_by(LessonProgress.completed_at)
+        )
+        return list(result.scalars().all())
+
     async def get_user_summary(self, user_id: uuid.UUID) -> dict:
         """
         Return per-module average scores and total lesson count for a user.
