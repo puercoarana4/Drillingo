@@ -64,8 +64,8 @@ async def seed_lessons(db: AsyncSession = Depends(get_db)):
                     INSERT INTO lessons (id, title, dialect_segment, level_band, day_order, audio_url)
                     VALUES (
                         :id, :title,
-                        :dialect_segment::dialect_segment_enum,
-                        :level_band::level_band_enum,
+                        CAST(:dialect_segment AS dialect_segment_enum),
+                        CAST(:level_band AS level_band_enum),
                         :day_order, :audio_url
                     )
                     ON CONFLICT (id) DO UPDATE SET
