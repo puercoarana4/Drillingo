@@ -11,17 +11,15 @@ interface TranslationInputProps {
 }
 
 /**
- * Normalise a string for comparison:
- * lowercase, trim, collapse whitespace, remove punctuation.
- * Req 6.5: accept orthographic variants (e.g. "finna" == "fin to").
+ * Normalise a string for comparison.
  */
-function normalise(s: string): string {
+const normalise = (s: string): string => {
   return s
     .toLowerCase()
     .trim()
     .replace(/[^\w\s']/g, "")
     .replace(/\s+/g, " ");
-}
+};
 
 export default function TranslationInput({
   formalPhrase,
@@ -33,22 +31,22 @@ export default function TranslationInput({
   const [submitted, setSubmitted] = useState(false);
   const [correct, setCorrect] = useState<boolean | null>(null);
 
-  function handleSubmit() {
+  const handleSubmit = () => {
     const norm = normalise(value);
     const isCorrect = acceptedAnswers.some((a) => normalise(a) === norm);
     setCorrect(isCorrect);
     setSubmitted(true);
     onResult(isCorrect, value);
-  }
+  };
 
   return (
     <div className="space-y-4">
-      {/* Formal phrase to translate (Req 6.1) */}
+      {/* Formal phrase to translate */}
       <div className="bg-background border border-border rounded-xl p-4">
         <p className="text-xs text-muted uppercase tracking-wider font-display mb-1">
           Formal English
         </p>
-        <p className="text-foreground text-lg">&ldquo;{formalPhrase}&rdquo;</p>
+        <p className="text-foreground text-lg">{"\""}{formalPhrase}{"\""}</p>
       </div>
 
       {/* Translation input */}
@@ -62,7 +60,7 @@ export default function TranslationInput({
           disabled={submitted}
           rows={3}
           className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground placeholder-muted focus:outline-none focus:border-accent transition-colors resize-none"
-          placeholder='e.g. "I ain\'t finna do allat"'
+          placeholder="e.g. I ain't finna do allat"
         />
       </div>
 
@@ -92,13 +90,12 @@ export default function TranslationInput({
           >
             {correct ? "✓ On point" : "✗ Not quite"}
           </p>
-          {/* Req 6.4: show reference answer and grammar explanation on wrong */}
           {!correct && (
             <div className="text-sm space-y-1">
               <p className="text-muted">
                 Reference:{" "}
                 <span className="text-foreground font-bold">
-                  &ldquo;{acceptedAnswers[0]}&rdquo;
+                  {"\""}{acceptedAnswers[0]}{"\""}
                 </span>
               </p>
               <p className="text-muted">{explanation}</p>
