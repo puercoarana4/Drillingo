@@ -1,210 +1,294 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import ChatBubble from "@/components/modules/ChatBubble";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import { api, ApiError } from "@/lib/api";
+import Button from "@/components/ui/Button";
+import { api } from "@/lib/api";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: "self" | "other";
-  terms: Array<{ term: string; definition: string; example: string }>;
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface BreakdownItem {
+  abbr: string;
+  meaning: string;
 }
 
-interface ReadingExercise {
-  lesson_id: string;
+interface ReadingPayload {
+  module_type: "reading";
+  exercise_type: "street_text_decode";
+  dialect_focus: string;
+  raw_text: string;
+  formal_translation: string;
+  breakdown: BreakdownItem[];
+  grammar_notes: string[];
+  cefr_target: string;
+  xp_reward: number;
+}
+
+interface Lesson {
+  id: string;
   title: string;
   dialect_segment: "east_coast" | "midwest";
-  messages: Message[];
+  level_band: string;
+  day_order: number;
+  audio_url: string; // JSON-encoded ReadingPayload for reading lessons
 }
 
-interface TermState {
-  term: string;
-  definition: string;
-  example: string;
-  answered: boolean;
-  correct: boolean | null;
-}
+type Phase = "read" | "breakdown" | "done";
 
-export default function ReadingPage() {
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function ReadingModulePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const [exercise, setExercise] = useState<ReadingExercise | null>(null);
-  const [activeTerm, setActiveTerm] = useState<TermState | null>(null);
-  const [userAnswer, setUserAnswer] = useState("");
-  const [score, setScore] = useState(0);
-  const [totalTerms, setTotalTerms] = useState(0);
-  const [answeredTerms, setAnsweredTerms] = useState<Set<string>>(new Set());
-  const [completed, setCompleted] = useState(false);
-  const [xpEarned, setXpEarned] = useState(0);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [payload, setPayload] = useState<ReadingPayload | null>(null);
+  const [phase, setPhase] = useState<Phase>("read");
+  const [revealedTerms, setRevealedTerms] = useState<Set<string>>(new Set());
+  const [activeDefinition, setActiveDefinition] = useState<BreakdownItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [xpAwarded, setXpAwarded] = useState<number | null>(null);
 
   useEffect(() => {
-    api.get<ReadingExercise>(`/api/content/lessons/${id}`)
-      .then((data) => {
-        setExercise(data as unknown as ReadingExercise);
-        const terms = (data as unknown as ReadingExercise).messages?.flatMap((m) => m.terms) ?? [];
-        setTotalTerms(terms.length);
+    api.get<Lesson>(`/api/content/lessons/${id}`)
+      .then((l) => {
+        setLesson(l);
+        // audio_url stores the JSON payload for non-audio lessons
+        if (l.audio_url.startsWith("{")) {
+          setPayload(JSON.parse(l.audio_url) as ReadingPayload);
+        }
       })
-      .catch(() => router.push("/lessons"))
+      .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, [id, router]);
 
-  function handleTermClick(term: string) {
-    if (answeredTerms.has(term.toLowerCase())) return;
-    const allTerms = exercise?.messages.flatMap((m) => m.terms) ?? [];
-    const found = allTerms.find((t) => t.term.toLowerCase() === term.toLowerCase());
-    if (!found) return;
-    setActiveTerm({ ...found, answered: false, correct: null });
-    setUserAnswer("");
+  async function handleComplete() {
+    if (!lesson || submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await api.post<{ xp_awarded: number }>("/api/progress/lesson", {
+        lesson_id: lesson.id,
+        module_type: "reading",
+        score: 100,
+      });
+      setXpAwarded(result.xp_awarded);
+      setPhase("done");
+    } catch {
+      // non-fatal — still show done state
+      setPhase("done");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  async function handleAnswerSubmit() {
-    if (!activeTerm || !exercise) return;
-    const isCorrect =
-      userAnswer.trim().toLowerCase() === activeTerm.definition.toLowerCase();
-
-    setActiveTerm((prev) => prev ? { ...prev, answered: true, correct: isCorrect } : null);
-
-    const newAnswered = new Set(answeredTerms);
-    newAnswered.add(activeTerm.term.toLowerCase());
-    setAnsweredTerms(newAnswered);
-
-    if (isCorrect) setScore((s) => s + 1);
-
-    // If all terms answered, complete the module
-    if (newAnswered.size >= totalTerms) {
-      setSubmitting(true);
-      try {
-        const finalScore = Math.round(((score + (isCorrect ? 1 : 0)) / totalTerms) * 100);
-        const res = await api.post<{ xp_awarded: number }>("/api/progress/lesson", {
-          lesson_id: exercise.lesson_id,
-          module_type: "reading",
-          score: finalScore,
-        });
-        setXpEarned(res.xp_awarded);
-        setCompleted(true);
-      } catch {
-        setCompleted(true);
-      } finally {
-        setSubmitting(false);
-      }
+  function handleTermClick(term: string) {
+    const item = payload?.breakdown.find(
+      (b) => b.abbr.toLowerCase() === term.toLowerCase()
+    );
+    if (item) {
+      setRevealedTerms((prev) => new Set([...prev, term.toLowerCase()]));
+      setActiveDefinition(item);
     }
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin h-8 w-8 border-2 border-accent border-t-transparent rounded-full" />
+        <div className="animate-spin h-10 w-10 border-2 border-accent border-t-transparent rounded-full" />
       </div>
     );
   }
 
-  if (completed) {
-    const finalScore = Math.round((score / totalTerms) * 100);
+  if (!lesson || !payload) {
     return (
-      <Card accent className="max-w-lg mx-auto text-center">
-        <p className="text-4xl mb-4">🔥</p>
-        <h2 className="font-display text-3xl uppercase text-accent mb-2">Done</h2>
-        <p className="text-muted mb-4">
-          Score: <span className="text-foreground font-bold">{finalScore}%</span>
-        </p>
-        <p className="text-accent font-display text-xl mb-6">+{xpEarned} XP</p>
-        <Button onClick={() => router.push("/lessons")} variant="primary">
-          Back to Lessons
-        </Button>
-      </Card>
+      <div className="text-center py-16">
+        <p className="text-muted">Lesson not found.</p>
+        <Link href="/lessons" className="text-accent hover:underline mt-4 block">
+          ← Back to Lessons
+        </Link>
+      </div>
     );
   }
+
+  // Build highlighted terms from breakdown abbreviations
+  const highlightedTerms = payload.breakdown.map((b) => ({
+    term: b.abbr,
+    index: 0,
+  }));
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-2xl uppercase text-foreground">
-            {exercise?.title ?? "Street Texts"}
+      <div className="flex items-center gap-3">
+        <Link href="/lessons" className="text-muted hover:text-foreground transition-colors">
+          ←
+        </Link>
+        <div className="flex-1 min-w-0">
+          <h1 className="font-display text-xl uppercase text-foreground tracking-wider truncate">
+            {lesson.title}
           </h1>
-          {exercise?.dialect_segment && (
-            <Badge variant={exercise.dialect_segment} className="mt-1">
-              {exercise.dialect_segment === "east_coast" ? "East Coast" : "Midwest"}
+          <div className="flex gap-2 mt-1">
+            <Badge variant={lesson.dialect_segment}>
+              {lesson.dialect_segment === "east_coast" ? "East Coast" : "Midwest"}
             </Badge>
-          )}
+            <Badge variant="muted">{lesson.level_band}</Badge>
+            <Badge variant="muted">{payload.cefr_target}</Badge>
+          </div>
         </div>
-        <span className="text-muted text-sm">
-          {answeredTerms.size}/{totalTerms} terms
-        </span>
       </div>
 
-      {/* Chat interface (Req 4.1) */}
-      <Card className="mb-4 min-h-[400px] overflow-y-auto">
-        {exercise?.messages.map((msg) => (
-          <ChatBubble
-            key={msg.id}
-            message={msg.text}
-            sender={msg.sender}
-            highlightedTerms={msg.terms.map((t, i) => ({ term: t.term, index: i }))}
-            onTermClick={handleTermClick}
-          />
-        ))}
-      </Card>
+      {/* Phase: READ */}
+      {phase === "read" && (
+        <>
+          <Card>
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">
+              📱 Incoming DM — {payload.dialect_focus}
+            </p>
+            {/* Render as a chat bubble with tappable terms */}
+            <ChatBubble
+              message={payload.raw_text}
+              sender="other"
+              highlightedTerms={highlightedTerms}
+              onTermClick={handleTermClick}
+              timestamp="just now"
+            />
+            <p className="text-xs text-muted mt-3">
+              Tap the <span className="text-accent font-bold">highlighted words</span> to decode them.
+            </p>
+          </Card>
 
-      {/* Term quiz panel */}
-      {activeTerm && (
-        <Card accent className="mb-4">
-          {!activeTerm.answered ? (
-            <>
-              <p className="text-muted text-sm mb-2 uppercase tracking-wider font-display">
-                What does <span className="text-accent">&quot;{activeTerm.term}&quot;</span> mean?
-              </p>
-              <input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAnswerSubmit()}
-                className="w-full bg-background border border-border rounded px-4 py-3 text-foreground focus:outline-none focus:border-accent mb-3"
-                placeholder="Type the meaning..."
-                autoFocus
-              />
-              <Button onClick={handleAnswerSubmit} variant="primary" size="md" loading={submitting}>
-                Submit
-              </Button>
-            </>
-          ) : (
-            <>
-              <p className={`font-display text-lg uppercase mb-2 ${activeTerm.correct ? "text-green-400" : "text-accent"}`}>
-                {activeTerm.correct ? "✓ Correct" : "✗ Wrong"}
-              </p>
-              {/* Req 4.4: show definition and example on wrong answer */}
-              {!activeTerm.correct && (
-                <div className="text-sm text-muted space-y-1">
-                  <p><span className="text-foreground font-bold">{activeTerm.term}</span>: {activeTerm.definition}</p>
-                  <p className="italic">&quot;{activeTerm.example}&quot;</p>
+          {/* Active definition popup */}
+          {activeDefinition && (
+            <Card accent>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-display text-lg uppercase text-accent">
+                    {activeDefinition.abbr}
+                  </p>
+                  <p className="text-foreground mt-1">{activeDefinition.meaning}</p>
                 </div>
-              )}
-              <Button
-                onClick={() => setActiveTerm(null)}
-                variant="secondary"
-                size="sm"
-                className="mt-3"
-              >
-                Continue
-              </Button>
-            </>
+                <button
+                  onClick={() => setActiveDefinition(null)}
+                  className="text-muted hover:text-foreground ml-4 text-lg leading-none"
+                  aria-label="Close definition"
+                >
+                  ×
+                </button>
+              </div>
+            </Card>
           )}
-        </Card>
+
+          {/* Progress indicator */}
+          <div className="flex items-center justify-between text-sm text-muted">
+            <span>
+              {revealedTerms.size} / {payload.breakdown.length} terms decoded
+            </span>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setPhase("breakdown")}
+            >
+              See Full Breakdown →
+            </Button>
+          </div>
+        </>
       )}
 
-      {!activeTerm && totalTerms > 0 && (
-        <p className="text-center text-muted text-sm">
-          Tap a <span className="text-accent">highlighted word</span> to test yourself
-        </p>
+      {/* Phase: BREAKDOWN */}
+      {phase === "breakdown" && (
+        <>
+          <Card>
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">
+              Original Message
+            </p>
+            <p className="text-foreground font-mono text-sm bg-background rounded p-3">
+              {payload.raw_text}
+            </p>
+          </Card>
+
+          {/* Formal translation */}
+          <Card accent>
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">
+              Standard English Translation
+            </p>
+            <p className="text-foreground leading-relaxed">{payload.formal_translation}</p>
+          </Card>
+
+          {/* Term-by-term breakdown */}
+          <div>
+            <h2 className="font-display text-sm uppercase tracking-wider text-muted mb-3">
+              Term Breakdown
+            </h2>
+            <div className="space-y-2">
+              {payload.breakdown.map((item) => (
+                <div
+                  key={item.abbr}
+                  className="flex items-start gap-3 bg-surface border border-border rounded-lg px-4 py-3"
+                >
+                  <span className="font-display text-accent uppercase text-sm w-28 flex-shrink-0">
+                    {item.abbr}
+                  </span>
+                  <span className="text-foreground text-sm">{item.meaning}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grammar notes */}
+          {payload.grammar_notes.length > 0 && (
+            <Card>
+              <h2 className="font-display text-sm uppercase tracking-wider text-muted mb-3">
+                Grammar Notes
+              </h2>
+              <ul className="space-y-2">
+                {payload.grammar_notes.map((note, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-foreground">
+                    <span className="text-accent flex-shrink-0">•</span>
+                    <span>{note}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          <Button
+            variant="primary"
+            size="md"
+            loading={submitting}
+            onClick={handleComplete}
+            className="w-full"
+          >
+            Complete Lesson (+{payload.xp_reward} XP)
+          </Button>
+        </>
+      )}
+
+      {/* Phase: DONE */}
+      {phase === "done" && (
+        <Card className="text-center py-10">
+          <p className="text-5xl mb-4">🔥</p>
+          <h2 className="font-display text-3xl uppercase text-accent mb-2">
+            Lesson Complete
+          </h2>
+          {xpAwarded !== null && (
+            <p className="text-muted mb-6">
+              +{xpAwarded} XP earned
+            </p>
+          )}
+          <div className="flex gap-3 justify-center">
+            <Link href="/lessons">
+              <Button variant="secondary" size="md">Back to Lessons</Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="primary" size="md">Dashboard</Button>
+            </Link>
+          </div>
+        </Card>
       )}
     </div>
   );

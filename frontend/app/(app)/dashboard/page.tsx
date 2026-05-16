@@ -34,12 +34,23 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Req 9.5: single API call for all metrics
     api.get<DashboardData>("/api/dashboard")
       .then(setData)
-      .catch(() => router.push("/login"))
+      .catch((err) => {
+        // 401 → session expired, redirect to login
+        if (err?.status === 401) {
+          router.push("/login");
+        } else {
+          setError(
+            "Could not load dashboard. Make sure the backend is reachable.\n" +
+            `(${err?.detail ?? err?.message ?? "Network error"})`
+          );
+        }
+      })
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -47,6 +58,25 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin h-10 w-10 border-2 border-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+        <p className="text-accent font-display text-xl uppercase">Backend Unreachable</p>
+        <p className="text-muted text-sm max-w-md whitespace-pre-line">{error}</p>
+        <p className="text-muted text-xs">
+          Set <code className="text-accent">NEXT_PUBLIC_API_URL</code> in{" "}
+          <code className="text-accent">frontend/.env.local</code> to your Railway URL.
+        </p>
+        <button
+          onClick={() => { setError(null); setLoading(true); api.get<DashboardData>("/api/dashboard").then(setData).catch((e) => setError(e?.detail ?? "Error")).finally(() => setLoading(false)); }}
+          className="px-4 py-2 bg-accent text-white rounded font-display uppercase text-sm hover:bg-red-700 transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }

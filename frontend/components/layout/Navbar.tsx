@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import StreakBadge from "./StreakBadge";
+import { removeToken } from "@/lib/auth";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -17,6 +18,14 @@ interface NavbarProps {
 
 export default function Navbar({ currentStreak = 0 }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    // Clear JWT from localStorage and cookie
+    removeToken();
+    document.cookie = "drillingo_token=; path=/; max-age=0; SameSite=Lax";
+    router.push("/login");
+  }
 
   return (
     <nav
@@ -54,8 +63,17 @@ export default function Navbar({ currentStreak = 0 }: NavbarProps) {
             })}
           </div>
 
-          {/* Streak badge */}
-          <StreakBadge currentStreak={currentStreak} />
+          {/* Right side: streak + logout */}
+          <div className="flex items-center gap-4">
+            <StreakBadge currentStreak={currentStreak} />
+            <button
+              onClick={handleLogout}
+              className="font-display text-xs uppercase tracking-wider text-muted hover:text-accent transition-colors"
+              aria-label="Log out"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       </div>
     </nav>
