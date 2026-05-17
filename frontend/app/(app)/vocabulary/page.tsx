@@ -273,11 +273,21 @@ function DictCard({ item, progress }: { item: VocabItem; progress?: UserVocabPro
               >
                 {expanded ? "Ocultar ejemplo" : "Ver ejemplo"}
               </button>
-              {expanded && (
-                <p className="text-foreground text-sm italic mt-2 border-l-2 border-accent pl-3">
-                  &ldquo;{item.example_sentence}&rdquo;
-                </p>
-              )}
+              {expanded && (() => {
+                const exParts = item.example_sentence!.split("|").map(s => s.trim());
+                return (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-foreground text-sm italic border-l-2 border-accent pl-3">
+                      &ldquo;{exParts[0]}&rdquo;
+                    </p>
+                    {exParts[1] && (
+                      <p className="text-muted text-xs italic border-l-2 border-border pl-3">
+                        {exParts[1]}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
             </>
           )}
           {progress && (
