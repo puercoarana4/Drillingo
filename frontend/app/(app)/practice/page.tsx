@@ -26,6 +26,7 @@ interface Lesson {
   dialect_segment: "east_coast" | "midwest";
   level_band: string;
   day_order: number;
+  audio_url: string;
 }
 
 interface PracticeResult {
@@ -53,6 +54,7 @@ interface PracticeTopic {
   dialect: "east_coast" | "midwest" | "general";
   level: string;
   locked: boolean;
+  requiredNode: number;
   focusAreas: string[];
   samplePhrases: string[];
 }
@@ -66,93 +68,59 @@ function buildTopics(lessons: Lesson[], progress: ProgressRecord[]): PracticeTop
     progress.map((p) => p.lesson_id)
   );
 
-  const topics: PracticeTopic[] = [
-    // Always unlocked — general intro
-    {
-      id: "intro-aave",
-      title: "AAVE Basics",
-      description: "Core grammar rules: dropped copula, double negation, finna",
-      dialect: "general",
-      level: "B1",
-      locked: false,
-      focusAreas: ["Dropped copula", "Double negation", "Finna as future marker", "Ain't usage"],
-      samplePhrases: ["He trippin'", "I ain't got no money", "We finna slide", "She buggin'"],
-    },
-    // Unlocked when Lesson 1 (East Coast) has any progress
-    {
-      id: "east-coast-slang",
-      title: "East Coast Slang",
-      description: "NYC/Bronx drill vocabulary — DD Osama, Kay Flock style",
-      dialect: "east_coast",
-      level: "B1",
-      locked: !lessons.some((l) => l.dialect_segment === "east_coast" && completedLessonIds.has(l.id)),
-      focusAreas: ["wtw", "deadass", "opp", "wrd2my-mom", "buggin'", "smh"],
-      samplePhrases: [
-        "Deadass he don't know nobody",
-        "Word to my mom I ain't runnin'",
-        "Yo wtw? He buggin smh",
-      ],
-    },
-    // Unlocked when Lesson 2 (Midwest) has any progress
-    {
-      id: "midwest-slang",
-      title: "Midwest / Chicago Drill",
-      description: "Chicago drill vocabulary — King Von, Lil Jeff style",
-      dialect: "midwest",
-      level: "B1",
-      locked: !lessons.some((l) => l.dialect_segment === "midwest" && completedLessonIds.has(l.id)),
-      focusAreas: ["merch it", "backdoor", "slide", "wfs", "dodge", "outside"],
-      samplePhrases: [
-        "We finna slide, merch it on Von",
-        "They backdoored him, he thought they was solid",
-        "Wfs? Slide to the block, don't dodge",
-      ],
-    },
-    // Unlocked when user has completed at least 2 lessons
-    {
-      id: "translation-drill",
-      title: "Formal → Drill Translation",
-      description: "Take formal English and flip it to authentic AAVE",
-      dialect: "general",
-      level: "B2",
-      locked: completedLessonIds.size < 2,
-      focusAreas: ["Inverse translation", "Grammar transformation", "AAVE register"],
-      samplePhrases: [
-        "I do not have any money → I ain't got no money",
-        "He is acting crazy → He trippin'",
-        "I am not going to do that → I ain't finna do allat",
-      ],
-    },
-    // Unlocked when user has completed all modules of at least 1 lesson
-    {
-      id: "pronunciation-flow",
-      title: "Pronunciation & Flow",
-      description: "AAVE phonetics, rhythm, and drill delivery",
-      dialect: "general",
-      level: "B2",
-      locked: completedLessonIds.size < 4,
-      focusAreas: ["Glottal stops", "Vowel reduction", "-ing → -in'", "Drill cadence", "Stress patterns"],
-      samplePhrases: [
-        "Word to my mom, I ain't runnin' from no opp",
-        "We finna slide, merch it on Von you ain't outside",
-        "Deadass he don't know nobody on this block",
-      ],
-    },
-    // C1 — unlocked when user has significant progress
-    {
-      id: "code-switching",
-      title: "Code-Switching",
-      description: "Switch between formal English and AAVE fluidly",
-      dialect: "general",
-      level: "C1",
-      locked: completedLessonIds.size < 6,
-      focusAreas: ["Register awareness", "Context-appropriate AAVE", "Academic vs street register"],
-      samplePhrases: [
-        "In a formal context: 'I disagree' → In AAVE: 'Nah, deadass that ain't it'",
-        "Formal: 'He is unreliable' → AAVE: 'He always backdooring people'",
-      ],
-    },
-  ];
+  const topics: PracticeTopic[] = [];
+
+  // Ordenar lecciones por día
+  const sortedLessons = [...lessons].sort((a, b) => a.day_order - b.day_order);
+
+  for (let i = 0; i < sortedLessons.length; i++) {
+    const lesson = sortedLessons[i];
+    let payload;
+    try {
+      payload = JSON.parse(lesson.audio_url);
+    } catch {
+      continue;
+    }
+
+    const reading = payload.modules?.reading;
+    const writing = payload.modules?.writing;
+    const speaking = payload.modules?.speaking;
+
+    if (!reading) continue;
+
+    // Node is unlocked if it's the first node OR if the user has completed at least one module of the PREVIOUS node.
+    let isLocked = false;
+    if (i > 0) {
+      const previousLessonId = sortedLessons[i - 1].id;
+      if (!completedLessonIds.has(previousLessonId)) {
+        isLocked = true;
+      }
+    }
+
+    const focusAreas = [...(reading.grammar_notes || [])];
+    if (reading.breakdown) {
+      reading.breakdown.forEach((b: any) => focusAreas.push(`Vocabulary: ${b.abbr}`));
+    }
+
+    const samplePhrases = [];
+    if (reading.raw_text) samplePhrases.push(`Translate to formal: "${reading.raw_text}"`);
+    if (writing?.formal_input && writing?.expected_drill_output) {
+      samplePhrases.push(`Translate to AAVE: "${writing.formal_input}" → "${writing.expected_drill_output}"`);
+    }
+    if (speaking?.target_phrase) samplePhrases.push(`Pronunciation: "${speaking.target_phrase}"`);
+
+    topics.push({
+      id: `lesson-${lesson.id}`,
+      title: `Node ${lesson.day_order} AI Practice`,
+      description: payload.lesson_title || "Practice grammar and vocabulary from this node.",
+      dialect: lesson.dialect_segment,
+      level: lesson.level_band,
+      locked: isLocked,
+      requiredNode: lesson.day_order > 1 ? lesson.day_order - 1 : 1,
+      focusAreas: focusAreas.slice(0, 5),
+      samplePhrases: samplePhrases,
+    });
+  }
 
   return topics;
 }
@@ -428,11 +396,7 @@ export default function PracticePage() {
 
                 {topic.locked && (
                   <p className="text-xs text-muted mt-2">
-                    {topic.level === "C1" ? "Complete 6+ modules to unlock" :
-                     topic.level === "B2" && topic.id === "code-switching" ? "Complete 6+ modules to unlock" :
-                     topic.level === "B2" ? "Complete 4+ modules to unlock" :
-                     topic.dialect === "east_coast" ? "Complete Lesson 1 to unlock" :
-                     "Complete Lesson 2 to unlock"}
+                    Complete Node {topic.requiredNode} to unlock
                   </p>
                 )}
               </div>
