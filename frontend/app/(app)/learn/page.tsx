@@ -150,8 +150,8 @@ function LessonNodeCard({
           </div>
         </div>
 
-        {/* Module progress pills */}
-        <div className="flex gap-2 mb-4">
+        {/* Module progress pills — 2x2 grid */}
+        <div className="grid grid-cols-2 gap-1.5 mb-4">
           {REQUIRED_MODULES.map((mod) => (
             <div
               key={mod}
@@ -165,8 +165,8 @@ function LessonNodeCard({
               ].join(" ")}
             >
               <span>{moduleIcons[mod]}</span>
-              <span>{mod}</span>
-              {completedModules.has(mod) && <span>✓</span>}
+              <span className="truncate">{mod}</span>
+              {completedModules.has(mod) && <span className="ml-auto">✓</span>}
             </div>
           ))}
         </div>
