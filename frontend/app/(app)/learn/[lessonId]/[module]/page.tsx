@@ -458,7 +458,7 @@ export default function GuidedModulePage() {
                     timestamp="just now"
                   />
                   <p className="text-xs text-muted mt-3">
-                    Tap <span className="text-accent font-bold">highlighted words</span> to decode them.
+                    Toca <span className="text-accent font-bold">las palabras resaltadas</span> para decodificarlas.
                   </p>
                 </Card>
                 {activeDefinition && (
@@ -473,25 +473,40 @@ export default function GuidedModulePage() {
                   </Card>
                 )}
                 <div className="flex items-center justify-between text-sm text-muted">
-                  <span>{revealedTerms.length}/{payload.breakdown.length} decoded</span>
-                  <Button variant="primary" size="md" onClick={() => setReadingPhase("breakdown")}>See Breakdown →</Button>
+                  <span>{revealedTerms.length}/{payload.breakdown.length} decodificadas</span>
+                  <Button variant="primary" size="md" onClick={() => setReadingPhase("breakdown")}>Ver Análisis →</Button>
                 </div>
               </>
             )}
 
             {readingPhase === "breakdown" && (
               <>
-                <Card accent>
-                  <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">Translation</p>
-                  <div className="space-y-2">
-                    {payload.formal_translation.split("|").map((line, idx) => (
-                      <p key={idx} className="text-foreground leading-relaxed text-sm">
-                        {line.trim()}
-                      </p>
-                    ))}
+                {/* ── Three-way comparison card ── */}
+                <div className="rounded-2xl border border-border overflow-hidden">
+                  {/* Row 1: AAVE */}
+                  <div className="bg-accent/10 border-b border-border px-4 py-3">
+                    <p className="text-xs font-display uppercase tracking-wider text-accent mb-1">🎤 AAVE / Drill</p>
+                    <p className="text-foreground text-sm font-bold leading-relaxed">{payload.raw_text}</p>
                   </div>
-                </Card>
+                  {/* Row 2: Formal English */}
+                  <div className="bg-surface border-b border-border px-4 py-3">
+                    <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇺🇸 Inglés Formal (SAE)</p>
+                    <p className="text-foreground text-sm leading-relaxed">
+                      {payload.formal_translation.split("|")[0].replace(/^Formal:/i, "").trim()}
+                    </p>
+                  </div>
+                  {/* Row 3: Spanish */}
+                  <div className="bg-background px-4 py-3">
+                    <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇲🇽 En Español</p>
+                    <p className="text-foreground text-sm leading-relaxed">
+                      {(payload.formal_translation.split("|")[1] || "").replace(/^Español:/i, "").trim()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Vocabulary breakdown ── */}
                 <div className="space-y-2">
+                  <p className="text-xs text-muted uppercase tracking-wider font-display px-1">Desglose de Vocabulario</p>
                   {payload.breakdown.map((item) => (
                     <div key={item.abbr} className="flex items-start gap-3 bg-surface border border-border rounded-lg px-4 py-3">
                       <span className="font-display text-accent uppercase text-sm w-28 flex-shrink-0">{item.abbr}</span>
@@ -499,9 +514,11 @@ export default function GuidedModulePage() {
                     </div>
                   ))}
                 </div>
+
+                {/* ── Grammar notes ── */}
                 {payload.grammar_notes.length > 0 && (
                   <Card>
-                    <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">Grammar Notes</p>
+                    <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">Nota Gramatical</p>
                     <ul className="space-y-2">
                       {payload.grammar_notes.map((note, i) => (
                         <li key={i} className="flex gap-2 text-sm text-foreground">
@@ -513,7 +530,7 @@ export default function GuidedModulePage() {
                   </Card>
                 )}
                 <Button variant="primary" size="md" className="w-full" onClick={() => setReadingPhase("match")}>
-                  Practice Vocabulary →
+                  Practicar Vocabulario →
                 </Button>
               </>
             )}
