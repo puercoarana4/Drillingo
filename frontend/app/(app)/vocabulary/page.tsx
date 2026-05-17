@@ -54,6 +54,11 @@ function FlashcardMode({
 
   const current = items[currentIndex];
 
+  // Parse definition into parts: parts[0]=SAE English, parts[1]=Spanish (if exists)
+  const defParts = current.definition.split("|").map((s) => s.trim());
+  const saeDefinition = defParts[0].replace(/^(English|SAE|Formal):/i, "").trim();
+  const spanishDefinition = defParts[1]?.replace(/^(Espa\u00f1ol|Spanish):/i, "").trim() || "";
+
   function handleFlip() {
     setSide((s) => (s === "term" ? "definition" : "term"));
   }
@@ -84,21 +89,21 @@ function FlashcardMode({
     return (
       <div className="max-w-md mx-auto text-center space-y-6 py-8">
         <div className="text-6xl mb-2">
-          {pct >= 80 ? "🔥" : pct >= 60 ? "💪" : "📚"}
+          {pct >= 80 ? "\uD83D\uDD25" : pct >= 60 ? "\uD83D\uDCAA" : "\uD83D\uDCDA"}
         </div>
-        <h2 className="font-display text-3xl uppercase text-accent">Session Complete</h2>
+        <h2 className="font-display text-3xl uppercase text-accent">Sesi\u00f3n Completada</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-green-900/20 border border-green-700 rounded-xl p-4 text-center">
-            <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-1">Correct</p>
+            <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-1">Correctas</p>
             <p className="font-display text-4xl text-green-400">{sessionResults.correct}</p>
           </div>
           <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
-            <p className="text-xs text-accent uppercase tracking-wider font-display mb-1">Wrong</p>
+            <p className="text-xs text-accent uppercase tracking-wider font-display mb-1">Incorrectas</p>
             <p className="font-display text-4xl text-accent">{sessionResults.wrong}</p>
           </div>
         </div>
         <p className="text-muted text-sm">
-          {pct >= 80 ? "You're killing it. Keep drilling." : pct >= 60 ? "Getting there. Run it back." : "Keep studying — you'll get it."}
+          {pct >= 80 ? "La est\u00e1s rompiendo. Sigue practicando." : pct >= 60 ? "Vas bien. Vuelta a empezar." : "Sigue estudiando \u2014 lo vas a lograr."}
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="secondary" size="md" onClick={() => {
@@ -108,10 +113,10 @@ function FlashcardMode({
             setDone(false);
             setSessionResults({ correct: 0, wrong: 0 });
           }}>
-            Run it back
+            Repetir
           </Button>
           <Button variant="primary" size="md" onClick={onClose}>
-            Back to Dictionary
+            Volver al Diccionario
           </Button>
         </div>
       </div>
@@ -123,7 +128,7 @@ function FlashcardMode({
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={onClose} className="text-muted hover:text-foreground transition-colors text-sm font-display uppercase tracking-wider">
-          ← Dictionary
+          ← Diccionario
         </button>
         <span className="text-muted text-sm font-display">
           {currentIndex + 1} / {items.length}
@@ -141,62 +146,65 @@ function FlashcardMode({
       {/* Flashcard */}
       <div
         onClick={handleFlip}
-        className="min-h-64 bg-surface border-2 border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-accent transition-colors select-none"
+        className="min-h-64 bg-surface border-2 border-border rounded-2xl overflow-hidden cursor-pointer hover:border-accent transition-colors select-none"
       >
-        <p className="text-xs text-muted uppercase tracking-wider font-display mb-4">
-          {side === "term" ? "What does this mean?" : "Definition"}
-        </p>
-
         {side === "term" ? (
-          <>
+          <div className="flex flex-col items-center justify-center text-center p-8 h-full min-h-64">
+            <p className="text-xs text-muted uppercase tracking-wider font-display mb-4">🎤 AAVE / Drill — \u00bfQu\u00e9 significa?</p>
             <h2 className="font-display text-4xl uppercase text-foreground mb-3">{current.term}</h2>
             {current.dialect_segment && (
               <Badge variant={current.dialect_segment}>
                 {current.dialect_segment === "east_coast" ? "East Coast" : "Midwest"}
               </Badge>
             )}
-            <p className="text-muted text-xs mt-4">Tap to reveal definition</p>
-          </>
+            <p className="text-muted text-xs mt-4">Toca para revelar la definici\u00f3n</p>
+          </div>
         ) : (
-          <>
-            <p className="text-foreground text-base leading-relaxed mb-4">{current.definition}</p>
-            {current.example_sentence && (
-              <p className="text-muted text-sm italic border-l-2 border-accent pl-3 text-left">
-                &ldquo;{current.example_sentence}&rdquo;
-              </p>
+          <div className="flex flex-col h-full min-h-64">
+            {/* SAE row */}
+            <div className="border-b border-border px-6 py-4 flex-1 flex flex-col justify-center">
+              <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇺🇸 Ingl\u00e9s Formal (SAE)</p>
+              <p className="text-foreground text-base leading-relaxed">{saeDefinition}</p>
+            </div>
+            {/* Spanish row */}
+            {spanishDefinition && (
+              <div className="px-6 py-4 flex-1 flex flex-col justify-center bg-background">
+                <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇲🇽 En Espa\u00f1ol</p>
+                <p className="text-foreground text-base leading-relaxed">{spanishDefinition}</p>
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      {/* Answer buttons — only show after flip */}
+      {/* Answer buttons */}
       {side === "definition" && !answered && (
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => handleAnswer(false)}
             className="py-4 rounded-xl border-2 border-accent/50 text-accent font-display uppercase tracking-wider text-sm hover:bg-accent/10 transition-colors"
           >
-            ✗ Didn't know
+            \u2717 No lo sab\u00eda
           </button>
           <button
             onClick={() => handleAnswer(true)}
             className="py-4 rounded-xl border-2 border-green-600 text-green-400 font-display uppercase tracking-wider text-sm hover:bg-green-900/20 transition-colors"
           >
-            ✓ Got it
+            \u2713 Lo sab\u00eda
           </button>
         </div>
       )}
 
       {answered && (
         <Button variant="primary" size="md" className="w-full" onClick={handleNext}>
-          {currentIndex + 1 >= items.length ? "See Results" : "Next →"}
+          {currentIndex + 1 >= items.length ? "Ver Resultados" : "Siguiente \u2192"}
         </Button>
       )}
 
       {/* Session score */}
       <div className="flex justify-center gap-6 text-sm">
-        <span className="text-green-400 font-display">✓ {sessionResults.correct}</span>
-        <span className="text-accent font-display">✗ {sessionResults.wrong}</span>
+        <span className="text-green-400 font-display">\u2713 {sessionResults.correct}</span>
+        <span className="text-accent font-display">\u2717 {sessionResults.wrong}</span>
       </div>
     </div>
   );
@@ -207,62 +215,87 @@ function FlashcardMode({
 function DictCard({ item, progress }: { item: VocabItem; progress?: UserVocabProgress }) {
   const [expanded, setExpanded] = useState(false);
 
+  // Parse definition: may be "SAE meaning | Spanish meaning"
+  const defParts = item.definition.split("|").map((s) => s.trim());
+  const saeDefinition = defParts[0].replace(/^(English|SAE|Formal):/i, "").trim();
+  const spanishDefinition = defParts[1]?.replace(/^(Espa\u00f1ol|Spanish):/i, "").trim() || "";
+
   return (
     <div className={[
-      "rounded-2xl p-5 border-2 transition-colors",
-      progress?.mastered ? "border-green-700 bg-green-900/10" : "border-border bg-surface",
+      "rounded-2xl border-2 overflow-hidden transition-colors",
+      progress?.mastered ? "border-green-700" : "border-border",
     ].join(" ")}>
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="font-display text-xl uppercase text-foreground">{item.term}</h3>
-          {progress?.mastered && <span className="text-green-400 text-xs font-display">✓ MASTERED</span>}
+      {/* Term header */}
+      <div className={["px-5 pt-4 pb-3", progress?.mastered ? "bg-green-900/10" : "bg-surface"].join(" ")}>
+        <div className="flex items-start justify-between mb-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-display text-xl uppercase text-accent">{item.term}</h3>
+            {progress?.mastered && <span className="text-green-400 text-xs font-display">\u2713 DOMINADO</span>}
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            {item.dialect_segment && (
+              <Badge variant={item.dialect_segment}>
+                {item.dialect_segment === "east_coast" ? "NYC" : "CHI"}
+              </Badge>
+            )}
+            {item.level_band && (
+              <span className="text-xs text-muted font-display">{item.level_band}</span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-          {item.dialect_segment && (
-            <Badge variant={item.dialect_segment}>
-              {item.dialect_segment === "east_coast" ? "NYC" : "CHI"}
-            </Badge>
-          )}
-          {item.level_band && (
-            <span className="text-xs text-muted font-display">{item.level_band}</span>
-          )}
-        </div>
+        <p className="text-xs text-muted font-display uppercase tracking-wider">🎤 AAVE / Drill Slang</p>
       </div>
 
-      <p className="text-muted text-sm leading-relaxed mb-3">{item.definition}</p>
-
-      {item.example_sentence && (
-        <>
-          <button
-            onClick={() => setExpanded((e) => !e)}
-            className="text-xs text-accent hover:underline font-display uppercase tracking-wider"
-          >
-            {expanded ? "Hide example" : "Show example"}
-          </button>
-          {expanded && (
-            <p className="text-foreground text-sm italic mt-2 border-l-2 border-accent pl-3">
-              &ldquo;{item.example_sentence}&rdquo;
-            </p>
-          )}
-        </>
-      )}
-
-      {progress && (
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
-          <span className="text-xs text-muted">
-            {progress.correct_count}/3 correct
-          </span>
-          <div className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={[
-                  "w-4 h-1.5 rounded-full",
-                  i < progress.correct_count ? "bg-green-500" : "bg-border",
-                ].join(" ")}
-              />
-            ))}
+      {/* Three-way breakdown */}
+      <div className="border-t border-border">
+        {/* SAE row */}
+        <div className="px-5 py-3 border-b border-border">
+          <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇺🇸 Ingl\u00e9s Formal (SAE)</p>
+          <p className="text-foreground text-sm leading-relaxed">{saeDefinition}</p>
+        </div>
+        {/* Spanish row */}
+        {spanishDefinition && (
+          <div className="px-5 py-3 bg-background">
+            <p className="text-xs font-display uppercase tracking-wider text-muted mb-1">🇲🇽 En Espa\u00f1ol</p>
+            <p className="text-foreground text-sm leading-relaxed">{spanishDefinition}</p>
           </div>
+        )}
+      </div>
+
+      {/* Example + Progress */}
+      {(item.example_sentence || progress) && (
+        <div className="px-5 py-3 bg-surface border-t border-border">
+          {item.example_sentence && (
+            <>
+              <button
+                onClick={() => setExpanded((e) => !e)}
+                className="text-xs text-accent hover:underline font-display uppercase tracking-wider"
+              >
+                {expanded ? "Ocultar ejemplo" : "Ver ejemplo"}
+              </button>
+              {expanded && (
+                <p className="text-foreground text-sm italic mt-2 border-l-2 border-accent pl-3">
+                  &ldquo;{item.example_sentence}&rdquo;
+                </p>
+              )}
+            </>
+          )}
+          {progress && (
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs text-muted">{progress.correct_count}/3 correctas</span>
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={[
+                      "w-4 h-1.5 rounded-full",
+                      i < progress.correct_count ? "bg-green-500" : "bg-border",
+                    ].join(" ")}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -338,10 +371,10 @@ export default function VocabularyPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-3xl uppercase text-foreground tracking-wider">
-            Slang Dictionary
+            Diccionario Drill
           </h1>
           <p className="text-muted text-sm mt-1">
-            {allItems.length} terms · {masteredCount} mastered
+            {allItems.length} t\u00e9rminos \u00b7 {masteredCount} dominados
           </p>
         </div>
         <Button
@@ -349,7 +382,7 @@ export default function VocabularyPage() {
           size="md"
           onClick={() => setView("flashcards")}
         >
-          🃏 Flashcards
+          \uD83C\uDFC3\u200D Flashcards
         </Button>
       </div>
 
@@ -389,7 +422,7 @@ export default function VocabularyPage() {
             })}
           </div>
           <p className="text-muted text-xs">
-            {masteredCount}/{allItems.length} mastered — answer correctly 3× to master a term
+            {masteredCount}/{allItems.length} dominados — responde correctamente 3× para dominar un término
           </p>
         </div>
       )}
