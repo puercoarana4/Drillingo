@@ -257,14 +257,14 @@ async def _verify(session: AsyncSession) -> None:
 
 async def main() -> None:
     reset_mode = "--reset" in sys.argv
-    print("\n🎤  Drillingo — Database Seeder")
+    print("\n[Drillingo] Database Seeder")
     async with SessionLocal() as session:
         if reset_mode:
             await _reset_content(session)
         await _seed_vocabulary(session)
         await _seed_lessons(session)
         await _verify(session)
-    print("\n✅  Seed completado exitosamente.\n")
+    print("\n[SUCCESS] Seed completado exitosamente.\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
