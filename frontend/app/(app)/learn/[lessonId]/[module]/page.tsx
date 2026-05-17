@@ -110,12 +110,19 @@ function extractYouTubeId(urlOrId: string): string | null {
   return null;
 }
 
-// ── Celebration overlay ───────────────────────────────────────────────────────
+// XP maximums per module (must match backend XP_BASE)
+const XP_MAX: Record<string, number> = {
+  reading: 5,
+  listening: 10,
+  writing: 20,
+  speaking: 8,
+};
 
 function CelebrationOverlay({
-  xp, isLastModule, nextModule, onClose,
+  xp, moduleType, isLastModule, nextModule, onClose,
 }: {
   xp: number;
+  moduleType: string;
   isLastModule: boolean;
   nextModule: ModuleType | null;
   onClose: () => void;
@@ -125,16 +132,32 @@ function CelebrationOverlay({
     return () => clearTimeout(t);
   }, [onClose]);
 
+  const maxXp = XP_MAX[moduleType] ?? 20;
+  const pct = maxXp > 0 ? Math.round((xp / maxXp) * 100) : 0;
+  const isPerfect = xp >= maxXp;
+  const emoji = isLastModule ? "🏆" : isPerfect ? "🔥" : pct >= 70 ? "💪" : "📚";
+  const label = isPerfect ? "¡Perfecto!" : pct >= 70 ? "¡Bien hecho!" : "Completado";
+
   return (
     <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-surface border-2 border-accent rounded-2xl p-8 max-w-sm w-full text-center animate-in zoom-in duration-300">
-        <div className="text-6xl mb-4">{isLastModule ? "🏆" : "🔥"}</div>
+        <div className="text-6xl mb-4">{emoji}</div>
         <h2 className="font-display text-3xl uppercase text-accent mb-2">
-          {isLastModule ? "Lesson Complete!" : "Module Done!"}
+          {isLastModule ? "¡Lección Completa!" : label}
         </h2>
-        <p className="text-foreground text-lg font-display mb-1">+{xp} XP</p>
-        <p className="text-muted text-sm mt-2">
-          {isLastModule ? "You unlocked the next lesson." : `Next up: ${nextModule?.toUpperCase()}`}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <p className="text-foreground text-2xl font-display">+{xp} XP</p>
+          <p className="text-muted text-sm font-display">/ {maxXp} max</p>
+        </div>
+        {/* XP bar */}
+        <div className="h-2 bg-border rounded-full overflow-hidden mb-3">
+          <div
+            className={["h-full rounded-full transition-all duration-700", isPerfect ? "bg-accent" : "bg-yellow-500"].join(" ")}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="text-muted text-xs">
+          {isLastModule ? "Desbloqueaste la siguiente lección." : `Siguiente: ${nextModule?.toUpperCase()}`}
         </p>
       </div>
     </div>
@@ -362,6 +385,7 @@ export default function GuidedModulePage() {
       {showCelebration && (
         <CelebrationOverlay
           xp={xpAwarded}
+          moduleType={currentModule}
           isLastModule={isLastModule}
           nextModule={nextModule}
           onClose={handleContinueToNext}

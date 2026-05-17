@@ -15,19 +15,58 @@ from app.schemas.progress import (
     VocabularyProgressResponse,
 )
 
-# XP awarded per module type (Req 10.1)
-XP_BY_MODULE = {
-    "reading": 10,
-    "listening": 15,
-    "writing": 20,
-    "speaking": 25,
+# ─── XP Economy ───────────────────────────────────────────────────────────────
+#
+#  Philosophy: XP should feel EARNED. Harder activities = more XP ceiling.
+#  Performance matters: a perfect score gives full XP, poor performance gives partial.
+#
+#  Base XP per module (awarded at 100% score):
+#    Reading   →  5 XP  (lowest: just reading & tapping words)
+#    Listening → 10 XP  (moderate: fill-in-the-blank from audio)
+#    Writing   → 20 XP  (highest: must produce AAVE from Standard English)
+#    Speaking  →  8 XP  (fixed: hard to auto-grade, rewards attempt)
+#
+#  Score modifier (applied to reading, listening, writing):
+#    score 90-100 → 100% of base XP   (perfect / near-perfect)
+#    score 70-89  →  70% of base XP   (good)
+#    score 50-69  →  50% of base XP   (passing)
+#    score < 50   →  20% of base XP   (attempted, minimal reward)
+#
+#  Vocabulary flashcards (awarded by patch /api/progress/vocabulary):
+#    Correct →  2 XP
+#    Wrong   →  0 XP
+#    Mastered (3× correct) → +5 XP bonus (handled in repo)
+#
+#  Level thresholds (harder to reach, more meaningful):
+#    B1 → B2: 300 XP  (~10 full days of perfect play)
+#    B2 → C1: 1200 XP (~40 full days of perfect play)
+# ──────────────────────────────────────────────────────────────────────────────
+
+XP_BASE = {
+    "reading":  5,
+    "listening": 10,
+    "writing":  20,
+    "speaking":  8,
 }
 
-# XP thresholds for level advancement (Req 10.3)
-# 500 XP total → B2, 2000 XP total → C1
+# Score thresholds → XP multiplier
+XP_SCORE_BRACKETS = [
+    (90, 1.0),   # perfect
+    (70, 0.7),   # good
+    (50, 0.5),   # passing
+    (0,  0.2),   # attempted
+]
+
+def _score_to_multiplier(score: int) -> float:
+    for threshold, multiplier in XP_SCORE_BRACKETS:
+        if score >= threshold:
+            return multiplier
+    return 0.2
+
+# Level thresholds (XP total → level)
 LEVEL_THRESHOLDS = [
-    (2000, "C1"),
-    (500, "B2"),
+    (1200, "C1"),
+    (300,  "B2"),
 ]
 
 
@@ -51,8 +90,14 @@ class ProgressService:
             score=data.score,
         )
 
-        # Award XP (Req 10.1)
-        xp = XP_BY_MODULE.get(data.module_type, 0)
+        # Award XP based on module difficulty × score performance (Req 10.1)
+        base_xp = XP_BASE.get(data.module_type, 0)
+        if data.module_type == "speaking":
+            # Speaking is always full base XP (rewarding the attempt itself)
+            xp = base_xp
+        else:
+            multiplier = _score_to_multiplier(data.score or 0)
+            xp = max(1, round(base_xp * multiplier))
         new_xp = await self._add_xp(user_id, xp)
 
         # Check for level-up (Req 10.2)
