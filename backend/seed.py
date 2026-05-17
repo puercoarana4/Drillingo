@@ -48,343 +48,322 @@ def _jdump(obj: dict) -> str:
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
 
-# ── VOCABULARY ────────────────────────────────────────────────────────────────
+# ── VOCABULARY MEGA-DICTIONARY ────────────────────────────────────────────────
 
 VOCABULARY_ITEMS = [
-    {
-        "id": uuid.UUID("11111111-0001-0001-0001-000000000001"),
-        "term": "Buggin'",
-        "definition": (
-            "Acting erratically or irrationally. Derived from 'bugging out'. "
-            "Core East Coast AAVE. Dropped copula: 'He buggin'' = 'He is bugging out'."
-        ),
-        "example_sentence": "Wrd2my-mom he buggin smh — I swear on my mother he is acting irrational.",
-        "dialect_segment": "east_coast",
-        "level_band": "B1",
-    },
-    {
-        "id": uuid.UUID("11111111-0002-0002-0002-000000000002"),
-        "term": "Merch it",
-        "definition": (
-            "To kill someone — 'put them on a shirt' (memorial t-shirts). "
-            "Midwest/Chicago drill. C1: euphemistic nominalization of lethal violence."
-        ),
-        "example_sentence": "Merch it on Von you ain't outside — I swear on Von you are not in the streets.",
-        "dialect_segment": "midwest",
-        "level_band": "C1",
-    },
-    {
-        "id": uuid.UUID("11111111-0003-0003-0003-000000000003"),
-        "term": "Finna",
-        "definition": (
-            "Contracted 'fixing to' — immediate future intent. AAVE equivalent of 'going to'. "
-            "Never co-occurs with 'be': 'I finna go' NOT 'I am finna go'."
-        ),
-        "example_sentence": "We finna slide — We are about to go confront them.",
-        "dialect_segment": None,
-        "level_band": "B1",
-    },
-    {
-        "id": uuid.UUID("11111111-0004-0004-0004-000000000004"),
-        "term": "Opp",
-        "definition": (
-            "Short for 'opponent/opposition'. Active rival or enemy. "
-            "Double negation: 'ain't runnin from no opp' = emphatic 'not running from any opponent'."
-        ),
-        "example_sentence": "I ain't runnin from no opp — I am not running away from any opponent.",
-        "dialect_segment": "east_coast",
-        "level_band": "B2",
-    },
-    {
-        "id": uuid.UUID("11111111-0005-0005-0005-000000000005"),
-        "term": "Deadass",
-        "definition": (
-            "Adverb: 'seriously', 'for real'. East Coast AAVE, NYC-associated. "
-            "Sentence-initial intensifier stronger than 'literally'."
-        ),
-        "example_sentence": "Deadass he don't know nobody on this block — Seriously, he does not know anyone here.",
-        "dialect_segment": "east_coast",
-        "level_band": "B2",
-    },
-    {
-        "id": uuid.UUID("11111111-0006-0006-0006-000000000006"),
-        "term": "Backdoor",
-        "definition": (
-            "To betray from within while pretending to be an ally. "
-            "Chicago/Midwest drill. C1: premeditated deception by a trusted associate."
-        ),
-        "example_sentence": "They backdoored him, he thought they was solid — They betrayed him; he believed they were trustworthy.",
-        "dialect_segment": "midwest",
-        "level_band": "C1",
-    },
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000001"), "term": "Crash out", "definition": "To lose control and act recklessly, often resulting in losing everything.", "example_sentence": "He crashed out over nothing.", "dialect_segment": None, "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000002"), "term": "Slide", "definition": "To drive to a location, usually enemy territory.", "example_sentence": "We finna slide on them tonight.", "dialect_segment": "midwest", "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000003"), "term": "Flock", "definition": "To shoot or to rob someone.", "example_sentence": "They tried to flock him for his chain.", "dialect_segment": "east_coast", "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000004"), "term": "Tweaking", "definition": "To act irrationally or panic.", "example_sentence": "Bro tweaking, tell him to chill.", "dialect_segment": "midwest", "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000005"), "term": "Cap", "definition": "To lie. 'No cap' means I am not lying.", "example_sentence": "That's cap, he wasn't there.", "dialect_segment": None, "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000006"), "term": "Snake", "definition": "To betray someone.", "example_sentence": "I thought we was cool but he snaked me.", "dialect_segment": None, "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000007"), "term": "Lurk", "definition": "To wait out of sight or observe secretly.", "example_sentence": "They was lurking block for hours.", "dialect_segment": None, "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000008"), "term": "Drop a dime", "definition": "To inform the police / to snitch.", "example_sentence": "He dropped a dime on the whole crew.", "dialect_segment": "east_coast", "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000009"), "term": "Wocky", "definition": "Strange or suspicious.", "example_sentence": "He acting wocky, I don't trust him.", "dialect_segment": "east_coast", "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000010"), "term": "Lackin'", "definition": "Caught off guard or unprepared (usually without a weapon).", "example_sentence": "Never get caught lackin at the store.", "dialect_segment": "midwest", "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000011"), "term": "Fanned out", "definition": "Acting obsessed or starstruck.", "example_sentence": "She was fanned out when she saw him.", "dialect_segment": None, "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000012"), "term": "Valid", "definition": "Acceptable, respected, or good.", "example_sentence": "That spot is valid, the food is crazy.", "dialect_segment": "east_coast", "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000013"), "term": "Dayroom", "definition": "Someone who is unreliable or does weird things.", "example_sentence": "He dayroom for leaving his boy like that.", "dialect_segment": "east_coast", "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000014"), "term": "On go", "definition": "Ready for action, usually violent.", "example_sentence": "The whole squad is on go right now.", "dialect_segment": "midwest", "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000015"), "term": "Opp", "definition": "Enemy or opposition.", "example_sentence": "Spotted an opp across the street.", "dialect_segment": "midwest", "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000016"), "term": "12", "definition": "The police.", "example_sentence": "12 pulling up, everybody scatter.", "dialect_segment": None, "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000017"), "term": "Blick", "definition": "Firearm / Gun.", "example_sentence": "He keep a blick on him at all times.", "dialect_segment": "east_coast", "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000018"), "term": "Drop", "definition": "The exact location or address of someone.", "example_sentence": "Send me the drop, I'm on the way.", "dialect_segment": None, "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000019"), "term": "Motion", "definition": "Having momentum, money, or success.", "example_sentence": "He getting real motion this year.", "dialect_segment": None, "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000020"), "term": "Function", "definition": "A party or gathering.", "example_sentence": "We sliding to the function later.", "dialect_segment": "east_coast", "level_band": "B1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000021"), "term": "Merch it", "definition": "Swear on it / Promise me.", "example_sentence": "Merch it you saw him there.", "dialect_segment": "midwest", "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000022"), "term": "Expeditiously", "definition": "Immediately and quickly.", "example_sentence": "Get over here expeditiously.", "dialect_segment": "east_coast", "level_band": "C1"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000023"), "term": "Word to my dead", "definition": "I swear on my deceased relatives.", "example_sentence": "Word to my dead I ain't do that.", "dialect_segment": "east_coast", "level_band": "B2"},
+    {"id": uuid.UUID("11111111-0000-0000-0000-000000000024"), "term": "Finna", "definition": "Contracted 'fixing to' — immediate future intent. AAVE equivalent of 'going to'.", "example_sentence": "We finna slide — We are about to go confront them.", "dialect_segment": None, "level_band": "B1"},
 ]
 
-# ── LESSONS — Each lesson has all 3 modules in its payload ────────────────────
-#
-# Structure stored in audio_url:
-# {
-#   "lesson_title": "...",
-#   "dialect_focus": "...",
-#   "modules": {
-#     "reading": { ...reading payload... },
-#     "listening": { ...listening payload... },
-#     "writing": { ...writing payload... }
-#   }
-# }
 
-_LESSON_EC_PAYLOAD = _jdump({
-    "lesson_title": "East Coast Block — DD Osama / Kay Flock",
+# ── PHASE 1 LESSONS: 4 Lessons Representing Weeks 1 to 4 ──────────────────────
+
+_L1_ZERO_COPULA = _jdump({
+    "lesson_title": "W1: Zero Copula (Absence of 'To Be')",
+    "dialect_focus": "Midwest / Chicago",
+    "modules": {
+        "reading": {
+            "module_type": "reading",
+            "dialect_focus": "Chicago Drill",
+            "raw_text": "yo he tweaking, tell him we outside",
+            "formal_translation": "Hey, he is acting irrationally. Tell him that we are outside.",
+            "breakdown": [
+                {"abbr": "tweaking", "meaning": "acting crazy or paranoid"},
+                {"abbr": "we outside", "meaning": "we are outside / actively in the streets"},
+            ],
+            "grammar_notes": [
+                "Zero Copula: AAVE often omits the verb 'to be' (is/are) when it acts as a linking verb in present tense.",
+                "Instead of 'he is tweaking', it is just 'he tweaking'.",
+                "Instead of 'we are outside', it is 'we outside'."
+            ],
+            "cefr_target": "B1",
+            "xp_reward": 10,
+        },
+        "listening": {
+            "module_type": "listening",
+            "artist": "Chief Keef / Midwest",
+            "dialect_focus": "Midwest / Chicago",
+            "audio_s3_url": "dummy",
+            "youtube_video_id": "g0v7Ow6Epog",  # Reusing Von video for testing
+            "original_bar": "We finna slide, merch it on Von you ain't outside.",
+            "exercise_text": "We ______ slide, ______ it on Von you ain't outside.",
+            "blanks": [
+                {"position": 1, "correct_answers": ["finna"], "hint": "About to / going to", "distractor_options": ["gonna", "bout"]},
+                {"position": 2, "correct_answers": ["merch", "Merch"], "hint": "Swear on it", "distractor_options": ["swear", "put"]},
+            ],
+            "full_translation": "We are about to drive over there. Swear on King Von that you are not outside.",
+            "grammar_notes": ["'You ain't outside' acts as a negated copula. 'Outside' means active in the streets."],
+            "cefr_target": "B1",
+            "xp_reward": 15,
+        },
+        "writing": {
+            "module_type": "writing",
+            "formal_input": "He is acting crazy. They are outside.",
+            "expected_drill_output": "He tweaking, they outside",
+            "accepted_variants": ["He tweaking, they outside", "He tweaking they outside", "He buggin, they outside"],
+            "evaluation_rubric": {
+                "zero_copula_1": {"description": "Drops 'is' before acting crazy", "points": 50, "example": "'He tweaking' ✓"},
+                "zero_copula_2": {"description": "Drops 'are' before outside", "points": 50, "example": "'They outside' ✓"},
+            },
+            "grammar_explanation": "Drop 'is' and 'are'. Use 'tweaking' or 'buggin' for acting crazy.",
+            "cefr_target": "B1",
+            "xp_reward": 20,
+        },
+        "speaking": {
+            "module_type": "speaking",
+            "target_phrase": "He tweaking, tell him we outside.",
+            "phonetic_tips": ["Blend 'we' and 'outside' smoothly.", "Drop the 'g' in tweaking."],
+            "cefr_target": "B1",
+            "xp_reward": 25,
+        },
+    },
+})
+
+_L2_NEGATIVE_CONCORD = _jdump({
+    "lesson_title": "W2: Negative Concord (Double Negation)",
     "dialect_focus": "East Coast / NYC",
     "modules": {
         "reading": {
             "module_type": "reading",
-            "dialect_focus": "East Coast — DD Osama / Kay Flock",
-            "raw_text": "yo wtw? idn what he talkin bout fr, wrd2my-mom he buggin smh",
-            "formal_translation": (
-                "Hey, what's going on? I don't know what he is talking about, "
-                "for real. I swear on my mother he is acting irrational, shaking my head."
-            ),
+            "dialect_focus": "East Coast Drill",
+            "raw_text": "wrd2my-mom I ain't got no money, ain't nobody doing nothing",
+            "formal_translation": "I swear on my mother I do not have any money, nobody is doing anything.",
             "breakdown": [
-                {"abbr": "yo",          "meaning": "Hey / informal greeting"},
-                {"abbr": "wtw",         "meaning": "What's the word? / What's going on? (East Coast)"},
-                {"abbr": "idn",         "meaning": "I don't know"},
-                {"abbr": "talkin bout", "meaning": "talking about (dropped -g, AAVE)"},
-                {"abbr": "fr",          "meaning": "for real — intensifier"},
-                {"abbr": "wrd2my-mom",  "meaning": "word to my mother — oath of truth"},
-                {"abbr": "buggin",      "meaning": "acting irrationally (see vocab: Buggin')"},
-                {"abbr": "smh",         "meaning": "shaking my head — disappointment/disbelief"},
+                {"abbr": "wrd2my-mom", "meaning": "word to my mother (I swear)"},
+                {"abbr": "ain't got no", "meaning": "do not have any"},
             ],
             "grammar_notes": [
-                "Dropped copula: 'he buggin' = 'he is bugging' — AAVE omits 'is' in present progressive.",
-                "'talkin bout' — -ing reduced to -in' in casual AAVE speech.",
-                "No punctuation except '?' — mirrors real DM/text register.",
+                "Negative Concord: Multiple negative words are used to emphasize the negation, not cancel it.",
+                "'ain't got no money' = do not have any money.",
+                "'ain't nobody doing nothing' = triple negation for emphasis."
             ],
-            "cefr_target": "B1→B2",
+            "cefr_target": "B1+",
             "xp_reward": 10,
         },
         "listening": {
             "module_type": "listening",
             "artist": "Kay Flock",
             "dialect_focus": "East Coast / NYC",
-            "audio_s3_url": "https://drillingo-assets.s3.amazonaws.com/audio/kay_flock_word_to_my_mom.mp3",
+            "audio_s3_url": "dummy",
             "youtube_video_id": "gGJS8W9emac",
             "original_bar": "Word to my mom, I ain't runnin' from no opp.",
             "exercise_text": "______ to my mom, I ______ runnin' from no opp.",
             "blanks": [
-                {
-                    "position": 1,
-                    "correct_answers": ["Word", "word"],
-                    "hint": "East Coast oath / truth affirmation",
-                    "distractor_options": ["Word", "Swear", "True", "Real"],
-                },
-                {
-                    "position": 2,
-                    "correct_answers": ["ain't", "aint"],
-                    "hint": "AAVE negation of 'am not' / 'is not' / 'are not'",
-                    "distractor_options": ["ain't", "won't", "don't", "can't"],
-                },
+                {"position": 1, "correct_answers": ["Word", "word"], "hint": "Oath", "distractor_options": ["Swear", "True"]},
+                {"position": 2, "correct_answers": ["ain't", "aint"], "hint": "Am not", "distractor_options": ["don't", "won't"]},
             ],
-            "full_translation": "I swear on my mother, I am not running away from any opponent.",
-            "grammar_notes": [
-                "'Word to my mom' — East Coast oath, equivalent to 'I swear on my mother'.",
-                "'ain't runnin'' — 'ain't' + present participle = emphatic present progressive negation.",
-                "Double negation: 'ain't' + 'no' = emphatic 'not from any opponent'.",
-            ],
-            "cefr_target": "B1→B2",
+            "full_translation": "I swear on my mother, I am not running from any enemy.",
+            "grammar_notes": ["'ain't runnin from no opp' is double negation for emphasis."],
+            "cefr_target": "B1+",
             "xp_reward": 15,
         },
         "writing": {
             "module_type": "writing",
-            "formal_input": "I do not have any money and I am not going to do that.",
-            "expected_drill_output": "I ain't got no money and I ain't finna do allat",
-            "accepted_variants": [
-                "I ain't got no money and I ain't finna do allat",
-                "I ain't got no money and I ain't finna do all that",
-                "Ain't got no money and ain't finna do allat",
-                "I ain't got no bread and I ain't finna do allat",
-            ],
+            "formal_input": "I do not have any money. Nobody is doing anything.",
+            "expected_drill_output": "I ain't got no money, ain't nobody doing nothing",
+            "accepted_variants": ["I ain't got no money, ain't nobody doing nothing", "I ain't got no bread, ain't nobody doing nothing"],
             "evaluation_rubric": {
-                "double_negation": {
-                    "description": "Uses 'ain't' + 'no' for emphatic negation",
-                    "points": 30,
-                    "example": "'ain't got no money' ✓ — 'don't have any money' ✗",
-                },
-                "dropped_copula": {
-                    "description": "Uses 'ain't finna' — drops 'am' before 'not going to'",
-                    "points": 30,
-                    "example": "'ain't finna do' ✓ — 'am not going to do' ✗",
-                },
-                "finna_usage": {
-                    "description": "Replaces 'going to' with 'finna'",
-                    "points": 20,
-                    "example": "'finna do' ✓ — 'gonna do' partial credit",
-                },
-                "allat_compression": {
-                    "description": "Compresses 'all of that' to 'allat' (C1 bonus)",
-                    "points": 20,
-                    "example": "'allat' ✓ — 'all that' partial credit",
-                },
+                "double_negation": {"description": "Uses 'ain't got no'", "points": 50, "example": "'ain't got no money' ✓"},
+                "triple_negation": {"description": "Uses 'ain't nobody doing nothing'", "points": 50, "example": "'ain't nobody doing nothing' ✓"},
             },
-            "grammar_explanation": (
-                "AAVE double negation: 'ain't got no' is emphatic and grammatically correct. "
-                "'Finna' replaces 'going to' entirely — never say 'am finna'. "
-                "'Allat' = phonological compression of 'all of that'."
-            ),
-            "cefr_target": "B1→B2",
+            "grammar_explanation": "Stack negatives to increase emphasis. Replace 'any' with 'no' and 'anything' with 'nothing'.",
+            "cefr_target": "B1+",
             "xp_reward": 20,
         },
         "speaking": {
             "module_type": "speaking",
-            "target_phrase": "Word to my mom, I ain't runnin' from no opp.",
-            "phonetic_tips": [
-                "'Word to my mom' — stress on 'Word', drop the 'g' in running → 'runnin'",
-                "'ain't' — contract fully, sounds like 'eynt' not 'am not'",
-                "'no opp' — 'no' is unstressed, 'opp' gets the stress",
-                "Rhythm: speak in a flow — match Kay Flock's cadence",
-            ],
-            "cefr_target": "B1→B2",
+            "target_phrase": "I ain't got no money, ain't nobody doing nothing.",
+            "phonetic_tips": ["Say 'ain't' sharply.", "Link 'got no' smoothly."],
+            "cefr_target": "B1+",
             "xp_reward": 25,
         },
     },
 })
 
-_LESSON_MW_PAYLOAD = _jdump({
-    "lesson_title": "Midwest Block — King Von / Lil Jeff",
-    "dialect_focus": "Midwest / Chicago",
+_L3_INVERTED_SYNTAX = _jdump({
+    "lesson_title": "W3: Inverted Syntax (Questions without Auxiliaries)",
+    "dialect_focus": "Chicago / NYC",
     "modules": {
         "reading": {
             "module_type": "reading",
-            "dialect_focus": "Midwest / Chicago — Lil Jeff / Bloodhound Q50",
-            "raw_text": "wfs? slide to the block, we tryna see wtw, don't dodge",
-            "formal_translation": (
-                "What's up? Come to the neighborhood, we are trying to find out "
-                "what is going on. Do not avoid us."
-            ),
+            "dialect_focus": "General Drill",
+            "raw_text": "where you going bro? why he do that?",
+            "formal_translation": "Where are you going brother? Why did he do that?",
             "breakdown": [
-                {"abbr": "wfs",   "meaning": "What's the fuck's up? / What's going on? (Chicago)"},
-                {"abbr": "slide", "meaning": "to come through / travel to a location (Midwest drill)"},
-                {"abbr": "block", "meaning": "the neighborhood block where the crew hangs"},
-                {"abbr": "tryna", "meaning": "trying to (contracted, AAVE)"},
-                {"abbr": "wtw",   "meaning": "what's the word / what's happening"},
-                {"abbr": "dodge", "meaning": "to avoid, evade, or not show up (Chicago slang)"},
+                {"abbr": "where you going", "meaning": "Where are you going"},
+                {"abbr": "why he do that", "meaning": "Why did he do that"},
             ],
             "grammar_notes": [
-                "'tryna' = 'trying to' — AAVE contraction, modal-like future intent.",
-                "Imperative 'slide' — no subject, direct command register.",
-                "Chicago drill texts omit punctuation and use minimal capitalization.",
+                "Inverted Syntax: Auxiliary verbs like 'do', 'does', 'did', and 'are' are completely dropped in questions.",
+                "The word order remains the same as a statement, but with question intonation."
             ],
-            "cefr_target": "B1→B2",
+            "cefr_target": "B1+",
             "xp_reward": 10,
         },
         "listening": {
             "module_type": "listening",
-            "artist": "King Von",
-            "dialect_focus": "Midwest / Chicago",
-            "audio_s3_url": "https://drillingo-assets.s3.amazonaws.com/audio/king_von_finna_slide.mp3",
-            "youtube_video_id": "g0v7Ow6Epog",
-            "original_bar": "We finna slide, merch it on Von you ain't outside.",
-            "exercise_text": "We ______ slide, ______ it on Von you ain't outside.",
+            "artist": "General Drill",
+            "dialect_focus": "General",
+            "audio_s3_url": "dummy",
+            "youtube_video_id": "g0v7Ow6Epog", # Dummy reuse
+            "original_bar": "Where you going with that blick?",
+            "exercise_text": "______ you going with that ______?",
             "blanks": [
-                {
-                    "position": 1,
-                    "correct_answers": ["finna"],
-                    "hint": "AAVE future marker meaning 'about to' / 'going to'",
-                    "distractor_options": ["gonna", "finna", "tryna", "bout to"],
-                },
-                {
-                    "position": 2,
-                    "correct_answers": ["merch", "Merch"],
-                    "hint": "Chicago slang: to put someone on a memorial t-shirt",
-                    "distractor_options": ["merch", "catch", "drop", "hit"],
-                },
+                {"position": 1, "correct_answers": ["Where", "where"], "hint": "Question word", "distractor_options": ["Why", "How"]},
+                {"position": 2, "correct_answers": ["blick"], "hint": "Firearm", "distractor_options": ["pole", "stick"]},
             ],
-            "full_translation": (
-                "We are about to go confront them. I swear on King Von "
-                "you are not actually in the streets."
-            ),
-            "grammar_notes": [
-                "'finna slide' — 'finna' replaces 'going to'; 'slide' = travel to confront.",
-                "'merch it on Von' — oath using a deceased artist's name as truth marker.",
-                "'you ain't outside' — 'ain't' = 'are not'; 'outside' = active in the streets.",
-            ],
-            "cefr_target": "B1→B2",
+            "full_translation": "Where are you going with that gun?",
+            "grammar_notes": ["'Where you going' omits the auxiliary 'are'."],
+            "cefr_target": "B1+",
             "xp_reward": 15,
         },
         "writing": {
             "module_type": "writing",
-            "formal_input": "He is acting crazy, he does not know anyone here.",
-            "expected_drill_output": "He trippin', he don't know nobody here",
-            "accepted_variants": [
-                "He trippin', he don't know nobody here",
-                "He trippin he don't know nobody here",
-                "He trippin', he don't know nobody out here",
-                "He buggin', he don't know nobody here",
-            ],
+            "formal_input": "Where are you going? Why did he do that?",
+            "expected_drill_output": "Where you going? Why he do that?",
+            "accepted_variants": ["Where you going? Why he do that", "Where you going bro? Why he do that"],
             "evaluation_rubric": {
-                "dropped_copula": {
-                    "description": "Omits 'is' before 'trippin'' — AAVE present progressive without copula",
-                    "points": 35,
-                    "example": "'He trippin'' ✓ — 'He is trippin'' ✗ (too formal)",
-                },
-                "trippin_or_buggin": {
-                    "description": "Uses 'trippin'' or 'buggin'' instead of 'acting crazy'",
-                    "points": 25,
-                    "example": "'trippin'' ✓ — 'acting crazy' ✗",
-                },
-                "double_negation": {
-                    "description": "Uses 'don't know nobody' — double negation for emphasis",
-                    "points": 40,
-                    "example": "'don't know nobody' ✓ — 'doesn't know anyone' ✗",
-                },
+                "drop_aux_1": {"description": "Drops 'are' in the first question", "points": 50, "example": "'Where you going?' ✓"},
+                "drop_aux_2": {"description": "Drops 'did' in the second question", "points": 50, "example": "'Why he do that?' ✓"},
             },
-            "grammar_explanation": (
-                "Dropped copula: 'He trippin'' = 'He is tripping/acting crazy'. "
-                "Double negation: 'don't know nobody' = emphatic 'does not know anyone'. "
-                "'don't' is used for all persons in AAVE — no third-person -s."
-            ),
-            "cefr_target": "B1→B2",
+            "grammar_explanation": "Remove the helper verbs (are, did) completely to form the question natively.",
+            "cefr_target": "B1+",
             "xp_reward": 20,
         },
         "speaking": {
             "module_type": "speaking",
-            "target_phrase": "We finna slide, merch it on Von you ain't outside.",
-            "phonetic_tips": [
-                "'finna' — one fluid word, not 'fixing to'. Short 'i', unstressed",
-                "'slide' — elongate slightly, Chicago drawl on the vowel",
-                "'merch it' — stress on 'merch', 'it' is quick and unstressed",
-                "'ain't outside' — 'ain't' contracted hard, stress on 'out' in outside",
-                "Overall: match King Von's flow — confident, measured, not rushed",
-            ],
-            "cefr_target": "B1→B2",
+            "target_phrase": "Where you going? Why he do that?",
+            "phonetic_tips": ["Rise your pitch at the end to indicate a question."],
+            "cefr_target": "B1+",
             "xp_reward": 25,
         },
     },
 })
 
+_L4_PAST_PARTICIPLE = _jdump({
+    "lesson_title": "W4: Simple Past vs Participle",
+    "dialect_focus": "Midwest",
+    "modules": {
+        "reading": {
+            "module_type": "reading",
+            "dialect_focus": "Chicago Drill",
+            "raw_text": "he gone there yesterday, I seen it with my own eyes",
+            "formal_translation": "He went there yesterday, I saw it with my own eyes.",
+            "breakdown": [
+                {"abbr": "he gone", "meaning": "he went"},
+                {"abbr": "I seen", "meaning": "I saw"},
+            ],
+            "grammar_notes": [
+                "Participle for Past: AAVE frequently swaps the simple past form with the past participle.",
+                "'went' becomes 'gone'.",
+                "'saw' becomes 'seen'."
+            ],
+            "cefr_target": "B2",
+            "xp_reward": 10,
+        },
+        "listening": {
+            "module_type": "listening",
+            "artist": "General Drill",
+            "dialect_focus": "Midwest",
+            "audio_s3_url": "dummy",
+            "youtube_video_id": "gGJS8W9emac", # Dummy reuse
+            "original_bar": "I seen him lacking on the block.",
+            "exercise_text": "I ______ him ______ on the block.",
+            "blanks": [
+                {"position": 1, "correct_answers": ["seen"], "hint": "Saw", "distractor_options": ["saw", "see"]},
+                {"position": 2, "correct_answers": ["lacking", "lackin"], "hint": "Caught off guard", "distractor_options": ["slippin", "hiding"]},
+            ],
+            "full_translation": "I saw him unprepared on the street.",
+            "grammar_notes": ["'I seen' replaces 'I saw'."],
+            "cefr_target": "B2",
+            "xp_reward": 15,
+        },
+        "writing": {
+            "module_type": "writing",
+            "formal_input": "He went there. I saw it.",
+            "expected_drill_output": "He gone there, I seen it",
+            "accepted_variants": ["He gone there, I seen it", "He gone there I seen it"],
+            "evaluation_rubric": {
+                "gone_usage": {"description": "Replaces 'went' with 'gone'", "points": 50, "example": "'He gone' ✓"},
+                "seen_usage": {"description": "Replaces 'saw' with 'seen'", "points": 50, "example": "'I seen it' ✓"},
+            },
+            "grammar_explanation": "Use the past participle form (gone, seen) without 'have' for simple past actions.",
+            "cefr_target": "B2",
+            "xp_reward": 20,
+        },
+        "speaking": {
+            "module_type": "speaking",
+            "target_phrase": "He gone there, I seen it.",
+            "phonetic_tips": ["Elongate the 'o' in gone slightly.", "Emphasis on 'seen'."],
+            "cefr_target": "B2",
+            "xp_reward": 25,
+        },
+    },
+})
+
+
 ALL_LESSONS = [
     {
         "id": uuid.UUID("55555555-0001-0001-0001-000000000001"),
-        "title": "Lesson 1 — East Coast Block (DD Osama / Kay Flock)",
-        "dialect_segment": "east_coast",
+        "title": "Week 1: Zero Copula (Absence of 'To Be')",
+        "dialect_segment": "midwest",
         "level_band": "B1",
         "day_order": 1,
-        "audio_url": _LESSON_EC_PAYLOAD,
+        "audio_url": _L1_ZERO_COPULA,
     },
     {
         "id": uuid.UUID("55555555-0002-0002-0002-000000000002"),
-        "title": "Lesson 2 — Midwest Block (King Von / Lil Jeff)",
-        "dialect_segment": "midwest",
+        "title": "Week 2: Negative Concord (Double Negation)",
+        "dialect_segment": "east_coast",
         "level_band": "B1",
         "day_order": 2,
-        "audio_url": _LESSON_MW_PAYLOAD,
+        "audio_url": _L2_NEGATIVE_CONCORD,
+    },
+    {
+        "id": uuid.UUID("55555555-0003-0003-0003-000000000003"),
+        "title": "Week 3: Inverted Syntax (Questions)",
+        "dialect_segment": "east_coast",
+        "level_band": "B1",
+        "day_order": 3,
+        "audio_url": _L3_INVERTED_SYNTAX,
+    },
+    {
+        "id": uuid.UUID("55555555-0004-0004-0004-000000000004"),
+        "title": "Week 4: Simple Past vs Participle",
+        "dialect_segment": "midwest",
+        "level_band": "B2",
+        "day_order": 4,
+        "audio_url": _L4_PAST_PARTICIPLE,
     },
 ]
+
 
 # ── Seed functions ────────────────────────────────────────────────────────────
 
 async def _reset_content(session: AsyncSession) -> None:
     print("  → Borrando lecciones existentes...")
-    # Delete old 6-lesson format IDs too
     old_ids = [
         "22222222-0001-0001-0001-000000000001",
         "22222222-0002-0002-0002-000000000002",
@@ -429,7 +408,6 @@ async def _seed_vocabulary(session: AsyncSession) -> None:
 
 
 async def _seed_lessons(session: AsyncSession) -> None:
-    # Always delete old-format lesson IDs first (they have wrong structure)
     old_ids = [
         "22222222-0001-0001-0001-000000000001",
         "22222222-0002-0002-0002-000000000002",
@@ -437,6 +415,8 @@ async def _seed_lessons(session: AsyncSession) -> None:
         "33333333-0002-0002-0002-000000000002",
         "44444444-0001-0001-0001-000000000001",
         "44444444-0002-0002-0002-000000000002",
+        "55555555-0001-0001-0001-000000000001",
+        "55555555-0002-0002-0002-000000000002",
     ]
     for lid in old_ids:
         await session.execute(text("DELETE FROM lessons WHERE id = :id"), {"id": lid})
