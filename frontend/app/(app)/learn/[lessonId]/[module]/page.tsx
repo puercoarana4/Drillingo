@@ -7,6 +7,7 @@ import ChatBubble from "@/components/modules/ChatBubble";
 import DrillYoutubePlayer from "@/components/modules/DrillYoutubePlayer";
 import FillInBlank, { BlankSlot } from "@/components/modules/FillInBlank";
 import SpeakingRecorder from "@/components/modules/SpeakingRecorder";
+import VocabularyMatch from "@/components/modules/VocabularyMatch";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -112,33 +113,29 @@ function extractYouTubeId(urlOrId: string): string | null {
 // ── Celebration overlay ───────────────────────────────────────────────────────
 
 function CelebrationOverlay({
-  xp, isLastModule, nextModule, onContinue,
+  xp, isLastModule, nextModule, onClose,
 }: {
   xp: number;
   isLastModule: boolean;
   nextModule: ModuleType | null;
-  onContinue: () => void;
+  onClose: () => void;
 }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 2500);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface border-2 border-accent rounded-2xl p-8 max-w-sm w-full text-center">
+      <div className="bg-surface border-2 border-accent rounded-2xl p-8 max-w-sm w-full text-center animate-in zoom-in duration-300">
         <div className="text-6xl mb-4">{isLastModule ? "🏆" : "🔥"}</div>
         <h2 className="font-display text-3xl uppercase text-accent mb-2">
           {isLastModule ? "Lesson Complete!" : "Module Done!"}
         </h2>
         <p className="text-foreground text-lg font-display mb-1">+{xp} XP</p>
-        <p className="text-muted text-sm mb-6">
+        <p className="text-muted text-sm mt-2">
           {isLastModule ? "You unlocked the next lesson." : `Next up: ${nextModule?.toUpperCase()}`}
         </p>
-        {isLastModule ? (
-          <Link href="/learn">
-            <Button variant="primary" size="md" className="w-full">Back to Path →</Button>
-          </Link>
-        ) : (
-          <Button variant="primary" size="md" className="w-full" onClick={onContinue}>
-            Continue to {nextModule?.toUpperCase()} →
-          </Button>
-        )}
       </div>
     </div>
   );
@@ -151,21 +148,40 @@ function WritingModule({
   onComplete,
   submitting,
   isReview = false,
+  lessonId,
 }: {
   payload: WritingPayload;
   onComplete: (score: number) => void;
   submitting: boolean;
   isReview?: boolean;
+  lessonId: string;
 }) {
-  const [answer, setAnswer] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const storageKey = `drillingo_ans_${lessonId}_writing`;
 
   function normalise(s: string): string {
     return s.toLowerCase().trim().replace(/[^\w\s']/g, "").replace(/\s+/g, " ");
   }
 
+  const [answer, setAnswer] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(storageKey) || "";
+    }
+    return "";
+  });
+  const [submitted, setSubmitted] = useState(isReview || false);
+  const [isCorrect, setIsCorrect] = useState(() => {
+    if (typeof window !== "undefined") {
+      const ans = localStorage.getItem(storageKey);
+      if (ans) {
+        const norm = normalise(ans);
+        return payload.accepted_variants.some((v) => normalise(v) === norm);
+      }
+    }
+    return false;
+  });
+
   function handleSubmit() {
+    localStorage.setItem(storageKey, answer);
     const norm = normalise(answer);
     const correct = payload.accepted_variants.some((v) => normalise(v) === norm);
     setIsCorrect(correct);
@@ -193,7 +209,7 @@ function WritingModule({
         <p className="text-foreground text-lg">&ldquo;{payload.formal_input}&rdquo;</p>
       </div>
 
-      {!submitted && !isReview ? (
+      {!submitted ? (
         <>
           <label className="block text-xs text-muted uppercase tracking-wider font-display mb-1">Say it in Drill</label>
           <textarea
@@ -209,19 +225,21 @@ function WritingModule({
         </>
       ) : (
         <div className="space-y-3">
-          {isReview && !submitted && (
+          {isReview && !answer && (
             <div className="bg-surface border border-green-700 rounded-xl p-3">
               <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-1">✓ Already completed</p>
               <p className="text-foreground text-sm font-bold">&ldquo;{payload.expected_drill_output}&rdquo;</p>
               <p className="text-muted text-xs mt-2">{payload.grammar_explanation}</p>
             </div>
           )}
-          {submitted && (
+          {(answer || !isReview) && (
             <>
               <div className={["rounded-xl p-4 border text-center", isCorrect ? "border-green-700 bg-green-900/20" : "border-accent/50 bg-accent/10"].join(" ")}>
                 <p className={["font-display text-2xl uppercase mb-1", isCorrect ? "text-green-400" : "text-accent"].join(" ")}>
                   {isCorrect ? "On Point 🔥" : "Keep Drilling"}
                 </p>
+                {isReview && <p className="text-xs text-muted mb-2">This is what you submitted:</p>}
+                <p className="text-foreground text-lg mb-2">&ldquo;{answer}&rdquo;</p>
                 <p className="text-muted text-sm">{isCorrect ? "Your translation matches the drill structure." : "Check the reference below."}</p>
               </div>
               <div className="bg-surface border border-border rounded-xl p-3">
@@ -255,7 +273,7 @@ export default function GuidedModulePage() {
 
   const [revealedTerms, setRevealedTerms] = useState<string[]>([]);
   const [activeDefinition, setActiveDefinition] = useState<BreakdownItem | null>(null);
-  const [readingPhase, setReadingPhase] = useState<"read" | "breakdown">("read");
+  const [readingPhase, setReadingPhase] = useState<"read" | "breakdown" | "match">("read");
   const [videoStarted, setVideoStarted] = useState(false);
 
   useEffect(() => {
@@ -309,6 +327,7 @@ export default function GuidedModulePage() {
         score: finalScore,
       });
       setXpAwarded(result.xp_awarded);
+      setIsReview(true);
     } catch {
       setXpAwarded(0);
     } finally {
@@ -319,7 +338,6 @@ export default function GuidedModulePage() {
 
   function handleContinueToNext() {
     setShowCelebration(false);
-    if (nextModule) router.push(`/learn/${lessonId}/${nextModule}`);
   }
 
   if (loading) {
@@ -346,7 +364,7 @@ export default function GuidedModulePage() {
           xp={xpAwarded}
           isLastModule={isLastModule}
           nextModule={nextModule}
-          onContinue={handleContinueToNext}
+          onClose={handleContinueToNext}
         />
       )}
 
@@ -488,12 +506,25 @@ export default function GuidedModulePage() {
                     </ul>
                   </Card>
                 )}
-                <Button variant="primary" size="md" className="w-full" loading={submitting}
-                  onClick={() => saveProgress(100)}
-                  disabled={isReview}
-                >
-                  {isReview ? "✓ Already Completed" : `Complete Reading (+${payload.xp_reward} XP)`}
+                <Button variant="primary" size="md" className="w-full" onClick={() => setReadingPhase("match")}>
+                  Practice Vocabulary →
                 </Button>
+              </>
+            )}
+
+            {readingPhase === "match" && (
+              <>
+                <VocabularyMatch 
+                  items={payload.breakdown} 
+                  onComplete={() => {
+                    if (!isReview) saveProgress(100);
+                  }} 
+                />
+                {isReview && (
+                  <div className="mt-4 p-3 bg-green-900/20 border border-green-700 rounded-xl text-center">
+                    <p className="text-green-400 font-display uppercase text-sm">✓ Already Completed</p>
+                  </div>
+                )}
               </>
             )}
           </>
@@ -528,18 +559,13 @@ export default function GuidedModulePage() {
               </Card>
               <Card>
                 <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">🎵 Fill in the blanks</p>
-                {isReview ? (
-                  <div className="bg-surface border border-green-700 rounded-xl p-3">
-                    <p className="text-xs text-green-400 uppercase tracking-wider font-display mb-2">✓ Already completed</p>
-                    <p className="text-foreground text-sm">&ldquo;{payload.original_bar}&rdquo;</p>
-                  </div>
-                ) : (
-                  <FillInBlank
-                    transcript={buildTranscript(payload.exercise_text)}
-                    blanks={buildBlankSlots(payload.blanks)}
-                    onComplete={(score) => saveProgress(score)}
-                  />
-                )}
+                <FillInBlank
+                  transcript={buildTranscript(payload.exercise_text)}
+                  blanks={buildBlankSlots(payload.blanks)}
+                  storageKey={`drillingo_ans_${lessonId}_listening`}
+                  isReview={isReview}
+                  onComplete={(score) => saveProgress(score)}
+                />
               </Card>
               <Card>
                 <p className="text-xs text-muted uppercase tracking-wider font-display mb-3">Word Bank</p>
@@ -555,7 +581,7 @@ export default function GuidedModulePage() {
 
         {/* ── WRITING — Smart local evaluation ── */}
         {currentModule === "writing" && payload.module_type === "writing" && (
-          <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} isReview={isReview} />
+          <WritingModule payload={payload} onComplete={saveProgress} submitting={submitting} isReview={isReview} lessonId={lessonId as string} />
         )}
 
         {/* ── SPEAKING — Live Block Feedback via Gemini Audio ── */}
@@ -587,6 +613,23 @@ export default function GuidedModulePage() {
           </Card>
         )}
       </div>
+      
+      {/* Next Module Action Area */}
+      {isReview && (
+        <div className="max-w-2xl mx-auto pt-6 pb-12">
+          <Button 
+            variant="primary" 
+            size="md" 
+            className="w-full text-lg py-4 shadow-lg shadow-accent/20"
+            onClick={() => {
+              if (nextModule) router.push(`/learn/${lessonId}/${nextModule}`);
+              else router.push("/learn");
+            }}
+          >
+            {isLastModule ? "Finish Lesson →" : `Continue to ${nextModule?.toUpperCase()} →`}
+          </Button>
+        </div>
+      )}
     </>
   );
 }

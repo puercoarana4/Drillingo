@@ -16,6 +16,8 @@ interface FillInBlankProps {
   transcript: string;
   blanks: BlankSlot[];
   onComplete: (score: number, results: BlankResult[]) => void;
+  storageKey?: string;
+  isReview?: boolean;
 }
 
 export interface BlankResult {
@@ -26,16 +28,46 @@ export interface BlankResult {
   explanation: string;
 }
 
-export default function FillInBlank({ transcript, blanks, onComplete }: FillInBlankProps) {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+export default function FillInBlank({ transcript, blanks, onComplete, storageKey, isReview }: FillInBlankProps) {
+  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {};
+  });
   const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState<BlankResult[]>([]);
+  const [reviewEvaluated, setReviewEvaluated] = useState(false);
+
+  // Evaluate automatically on mount if isReview
+  if (isReview && !reviewEvaluated) {
+    const evaluated: BlankResult[] = blanks.map((blank) => {
+      const userAnswer = (answers[blank.id] ?? "").trim().toLowerCase();
+      const correct = userAnswer === blank.correctAnswer.toLowerCase();
+      return {
+        blankId: blank.id,
+        userAnswer: answers[blank.id] ?? "",
+        correctAnswer: blank.correctAnswer,
+        correct,
+        explanation: blank.explanation,
+      };
+    });
+    setResults(evaluated);
+    setSubmitted(true);
+    setReviewEvaluated(true);
+  }
 
   function handleChange(blankId: string, value: string) {
     setAnswers((prev) => ({ ...prev, [blankId]: value }));
   }
 
   function handleSubmit() {
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(answers));
+    }
     const evaluated: BlankResult[] = blanks.map((blank) => {
       const userAnswer = (answers[blank.id] ?? "").trim().toLowerCase();
       const correct = userAnswer === blank.correctAnswer.toLowerCase();
