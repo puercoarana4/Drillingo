@@ -483,7 +483,13 @@ export default function GuidedModulePage() {
               <>
                 <Card accent>
                   <p className="text-xs text-muted uppercase tracking-wider font-display mb-2">Translation</p>
-                  <p className="text-foreground leading-relaxed">{payload.formal_translation}</p>
+                  <div className="space-y-2">
+                    {payload.formal_translation.split("|").map((line, idx) => (
+                      <p key={idx} className="text-foreground leading-relaxed text-sm">
+                        {line.trim()}
+                      </p>
+                    ))}
+                  </div>
                 </Card>
                 <div className="space-y-2">
                   {payload.breakdown.map((item) => (
