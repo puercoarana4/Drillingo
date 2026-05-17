@@ -57,18 +57,22 @@ export default function DrillYoutubePlayer({
 
   // Fallback when YouTube blocks the embed
   if (embedError) {
+    // Use YouTube search URL as fallback — always finds real results
+    const searchQuery = encodeURIComponent(title || `${videoId} official`);
+    const searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
     return (
       <div className="rounded-xl border border-border bg-surface p-4 text-center">
         <p className="text-muted text-sm mb-2">
           🔒 This video cannot be embedded.
         </p>
         <a
-          href={`https://www.youtube.com/watch?v=${videoId}`}
+          href={searchUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-accent text-sm hover:underline font-display uppercase tracking-wider"
         >
-          Watch on YouTube →
+          Search on YouTube →
         </a>
         <p className="text-muted text-xs mt-2">
           Open the video, listen to the bar, then fill in the blanks below.
